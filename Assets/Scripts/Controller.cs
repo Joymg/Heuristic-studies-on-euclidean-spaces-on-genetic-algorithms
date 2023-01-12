@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Controller : MonoBehaviour
@@ -22,13 +23,16 @@ public class Controller : MonoBehaviour
     public Transform spawn;
     public Transform target;
 
-
+    public List<Obstacle> obstacles;
 
     private void Start()
     {
         lifecycle = 0;
         recordTime = float.MaxValue;
         Instance = this;
+
+        obstacles = FindObjectsOfType<Obstacle>().ToList();
+
         population.Initialize(numAgents, numMovements, mutationChance, spawn, target);
     }
 

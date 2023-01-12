@@ -18,7 +18,7 @@ public class Dna
             Genes = new List<Vector2>();
             for (int i = 0; i < Controller.Instance.numMovements; i++)
             {
-                Genes.Add(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * .5f);
+                Genes.Add(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized * .5f);
             }
         }
     }
@@ -49,7 +49,7 @@ public class Dna
         {
             if (Random.Range(0, 1f) < Controller.Instance.mutationChance)
             {
-                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * .5f;
+                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized * .5f;
             }
         }
     }

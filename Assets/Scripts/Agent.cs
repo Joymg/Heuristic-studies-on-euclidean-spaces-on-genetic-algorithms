@@ -80,6 +80,8 @@ public class Agent : MonoBehaviour
         }
     }
 
+
+
     public void CheckTargetReached()
     {
         float distance = Vector2.Distance(transform.position, target);
@@ -94,6 +96,14 @@ public class Agent : MonoBehaviour
         else if (!reachedTarget)
         {
             finishTime++;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 6)
+        {
+            hitObstacle = true;
         }
     }
 }

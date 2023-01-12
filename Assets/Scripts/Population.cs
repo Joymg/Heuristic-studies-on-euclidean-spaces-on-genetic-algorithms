@@ -17,6 +17,8 @@ public class Population : MonoBehaviour
     private List<Agent> population;
     private List<Agent> matingPool;
 
+
+
     public GameObject agentPrefab;
 
     private float TotalFitness => population.Sum(agent => agent.Fitness);
@@ -67,9 +69,6 @@ public class Population : MonoBehaviour
     {
         population.ForEach(agent => agent.CalculateFitness());
     }
-
-
-    
 
     public void Selection()
     {
