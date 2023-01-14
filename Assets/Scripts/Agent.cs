@@ -8,7 +8,7 @@ public class Agent : MonoBehaviour
 
     private float speed = 20;
     private float finishTime = 0;
-    private float recordDistance = int.MaxValue;
+    private float distanceToTarget;
     private Dna dna;
     public float fitness = 0;
 
@@ -21,7 +21,7 @@ public class Agent : MonoBehaviour
 
     public bool Finished => hitObstacle || reachedTarget || outOfEnergy;
 
-    private Vector2 target ;
+    protected Vector2 target ;
     private Vector2 nextStepPosition;
 
     public float Fitness => fitness;
@@ -43,14 +43,12 @@ public class Agent : MonoBehaviour
         hitObstacle = reachedTarget = outOfEnergy = false;
         fitness = 0;
         finishTime = 0;
-        recordDistance = int.MaxValue;
+        distanceToTarget = 0;
     }
 
     public void CalculateFitness()
     {
-        if (recordDistance < 1) recordDistance = 1;
-
-        fitness = 1 / (finishTime * recordDistance);
+        fitness = 1 / (finishTime * distanceToTarget);
 
         fitness = Mathf.Pow(fitness, 2);
 
@@ -60,11 +58,17 @@ public class Agent : MonoBehaviour
             fitness *= 2f;
     }
 
+    protected virtual float CalculateDistance()
+    {
+        return -1;
+    }
+
     public void Tick()
     {
         if (hitObstacle || reachedTarget || outOfEnergy) return;
         if (geneIndex == Controller.Instance.numMovements)
         {
+            distanceToTarget = CalculateDistance();
             outOfEnergy = true;
             return;
         }
@@ -86,11 +90,10 @@ public class Agent : MonoBehaviour
     {
         float distance = Vector2.Distance(transform.position, target);
 
-        if (distance < recordDistance) recordDistance = distance;
-
         if (distance < 0.5f && !reachedTarget)
         {
             reachedTarget = true;
+            distanceToTarget = CalculateDistance();
             CalculateFitness();
         }
         else if (!reachedTarget)
@@ -104,6 +107,7 @@ public class Agent : MonoBehaviour
         if (collision.gameObject.layer == 6)
         {
             hitObstacle = true;
+            distanceToTarget = CalculateDistance();
         }
     }
 }

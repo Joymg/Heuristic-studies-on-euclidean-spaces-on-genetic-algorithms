@@ -4,6 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public enum TypeOfDistance
+{
+    Euclidean,
+    Manhattan,
+    Chebyshev,
+}
+
 public class Population : MonoBehaviour
 {
     private int numAgents;
@@ -17,9 +24,11 @@ public class Population : MonoBehaviour
     private List<Agent> population;
     private List<Agent> matingPool;
 
+    public TypeOfDistance typeOfDistance;
 
-
-    public GameObject agentPrefab;
+    public GameObject agentEuclideanPrefab;
+    public GameObject agentManhattanPrefab;
+    public GameObject agentChebyshevPrefab;
 
     private float TotalFitness => population.Sum(agent => agent.Fitness);
     public bool IsRunning => population.Any(agent => !agent.Finished);
@@ -44,7 +53,22 @@ public class Population : MonoBehaviour
         population = new List<Agent>(numAgents);
         for (int i = 0; i < numAgents; i++)
         {
-            GameObject prefab = Instantiate(agentPrefab);
+            GameObject prefab;
+            switch (typeOfDistance)
+            {
+                case TypeOfDistance.Euclidean:
+                    prefab = Instantiate(agentEuclideanPrefab);
+                    break;
+                case TypeOfDistance.Manhattan:
+                    prefab = Instantiate(agentManhattanPrefab);
+                    break;
+                case TypeOfDistance.Chebyshev:
+                    prefab = Instantiate(agentChebyshevPrefab);
+                    break;
+                default:
+                    prefab = Instantiate(agentEuclideanPrefab);
+                    break;
+            }
             Agent agent = prefab.GetComponent<Agent>();
             agent.Initialize(spawnPoint, targetPoint, new Dna());
             population.Add(agent);
