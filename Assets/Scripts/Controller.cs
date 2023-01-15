@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class Controller : MonoBehaviour
@@ -52,6 +53,8 @@ public class Controller : MonoBehaviour
             population.CalculateFitness();
             population.Selection();
             population.Reproduction();
+            population.SetElites(numIterations);
+            numIterations++;
         }
     }
 }

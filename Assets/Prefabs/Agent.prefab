@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitness: 0
+  renderer: {fileID: 2502210505751340368}
 --- !u!58 &6889273336697711730
 CircleCollider2D:
   m_ObjectHideFlags: 0

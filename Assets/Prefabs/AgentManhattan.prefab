@@ -63,6 +63,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fitness: 0
+  renderer: {fileID: 2502210505751340368}
 --- !u!1 &7987195566840734383
 GameObject:
   m_ObjectHideFlags: 0

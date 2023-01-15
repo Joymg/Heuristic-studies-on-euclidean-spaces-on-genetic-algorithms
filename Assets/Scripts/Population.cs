@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public enum TypeOfDistance
 {
@@ -25,6 +26,7 @@ public class Population : MonoBehaviour
     private List<Agent> matingPool;
 
     public TypeOfDistance typeOfDistance;
+    private List<Agent> elitePool;
 
     public GameObject agentEuclideanPrefab;
     public GameObject agentManhattanPrefab;
@@ -37,6 +39,7 @@ public class Population : MonoBehaviour
     {
         population = new List<Agent>();
         matingPool = new List<Agent>();
+        elitePool = new List<Agent>();
 
         this.numAgents = numAgents;
         this.numMovements = numMovements;
@@ -51,6 +54,8 @@ public class Population : MonoBehaviour
     public void CreateNewGeneration()
     {
         population = new List<Agent>(numAgents);
+
+        GameObject agentContainer = new GameObject("Agent Container");
         for (int i = 0; i < numAgents; i++)
         {
             GameObject prefab;
@@ -72,6 +77,8 @@ public class Population : MonoBehaviour
             Agent agent = prefab.GetComponent<Agent>();
             agent.Initialize(spawnPoint, targetPoint, new Dna());
             population.Add(agent);
+
+            agent.transform.SetParent(agentContainer.transform);
         }
     }
 
@@ -98,6 +105,8 @@ public class Population : MonoBehaviour
     {
         matingPool.Clear();
 
+        GetElites();
+
         float maxFitness = GetMaxFitness();
 
         for (int i = 0; i < population.Count; i++)
@@ -116,12 +125,28 @@ public class Population : MonoBehaviour
         }
     }
 
+    private void GetElites()
+    {
+        population = population.OrderByDescending(agent => agent.fitness).ToList();
+        elitePool = population.GetRange(0, 3);
+        string s = "";
+
+        for (int i = 0; i < numAgents; i++)
+        {
+            s += $"{population[i].fitness}, ";
+        }
+
+        Debug.Log(s);
+        s = "";
+        
+    }
+
     public void Reproduction()
     {
         for (int i = 0; i < population.Count; i++)
         {
-            int index1 = UnityEngine.Random.Range(0, matingPool.Count);
-            int index2 = UnityEngine.Random.Range(0, matingPool.Count);
+            int index1 = Random.Range(0, matingPool.Count);
+            int index2 = Random.Range(0, matingPool.Count);
 
             Agent parent1 = matingPool[index1];
             Agent parent2 = matingPool[index2];
@@ -131,7 +156,23 @@ public class Population : MonoBehaviour
             child.Mutate();
 
             population[i].Initialize(spawnPoint, targetPoint, child);
+            population[i].renderer.color = Color.red;
+            population[index].renderer.sortingOrder = 0;
         }
+    }
+
+    public void SetElites(int iteration)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            int index = Random.Range(0, numAgents);
+            population[index].Initialize(spawnPoint,targetPoint, elitePool[i].Dna);
+            population[index].gameObject.name = $"Best in {iteration}";
+            population[index].renderer.color = Color.green;
+            population[index].renderer.sortingOrder = 1;
+
+        }
+
     }
 
 

@@ -24,6 +24,8 @@ public class Agent : MonoBehaviour
     protected Vector2 target ;
     private Vector2 nextStepPosition;
 
+    public SpriteRenderer renderer;
+
     public float Fitness => fitness;
     public Dna Dna => dna;
 
@@ -50,12 +52,12 @@ public class Agent : MonoBehaviour
     {
         fitness = 1 / (finishTime * distanceToTarget);
 
-        fitness = Mathf.Pow(fitness, 2);
+        fitness = fitness * fitness * fitness * fitness;
 
         if (hitObstacle)
             fitness *= .1f;
         if (reachedTarget)
-            fitness *= 2f;
+            fitness *= 4f;
     }
 
     protected virtual float CalculateDistance()
@@ -72,7 +74,7 @@ public class Agent : MonoBehaviour
             outOfEnergy = true;
             return;
         }
-        
+
         if ((Vector2)transform.position == nextStepPosition)
         {
             nextStepPosition = (Vector2)transform.position + dna.Genes[geneIndex];
