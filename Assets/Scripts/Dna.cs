@@ -5,6 +5,12 @@ using UnityEngine;
 [System.Serializable]
 public class Dna
 {
+    public Dna(Dna copydna)
+    {
+        Genes = new List<Vector2>(copydna.Genes);
+    }
+
+
     public List<Vector2> Genes;
 
     public Dna(List<Vector2> newGenes = null)

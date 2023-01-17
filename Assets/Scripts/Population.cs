@@ -17,6 +17,7 @@ public class Population : MonoBehaviour
     private int numAgents;
     private int numMovements;
     private float mutationChance;
+    private int numEliteAgents = 3;
     private int generations = 0;
 
     private Vector2 spawnPoint;
@@ -26,7 +27,7 @@ public class Population : MonoBehaviour
     private List<Agent> matingPool;
 
     public TypeOfDistance typeOfDistance;
-    private List<Agent> elitePool;
+    private List<Dna> elitePool;
 
     public GameObject agentEuclideanPrefab;
     public GameObject agentManhattanPrefab;
@@ -39,7 +40,7 @@ public class Population : MonoBehaviour
     {
         population = new List<Agent>();
         matingPool = new List<Agent>();
-        elitePool = new List<Agent>();
+        elitePool = new List<Dna>();
 
         this.numAgents = numAgents;
         this.numMovements = numMovements;
@@ -128,7 +129,8 @@ public class Population : MonoBehaviour
     private void GetElites()
     {
         population = population.OrderByDescending(agent => agent.fitness).ToList();
-        elitePool = population.GetRange(0, 3);
+        SaveElites();
+        //elitePool = new List<Agent>(population.GetRange(0, numEliteAgents));
         string s = "";
 
         for (int i = 0; i < numAgents; i++)
@@ -138,7 +140,7 @@ public class Population : MonoBehaviour
 
         Debug.Log(s);
         s = "";
-        
+
     }
 
     public void Reproduction()
@@ -157,7 +159,7 @@ public class Population : MonoBehaviour
 
             population[i].Initialize(spawnPoint, targetPoint, child);
             population[i].renderer.color = Color.red;
-            population[index].renderer.sortingOrder = 0;
+            population[i].renderer.sortingOrder = 0;
         }
     }
 
@@ -166,13 +168,11 @@ public class Population : MonoBehaviour
         for (int i = 0; i < 3; i++)
         {
             int index = Random.Range(0, numAgents);
-            population[index].Initialize(spawnPoint,targetPoint, elitePool[i].Dna);
+            population[index].Initialize(spawnPoint, targetPoint, elitePool[i]);
             population[index].gameObject.name = $"Best in {iteration}";
             population[index].renderer.color = Color.green;
             population[index].renderer.sortingOrder = 1;
-
         }
-
     }
 
 
@@ -185,4 +185,27 @@ public class Population : MonoBehaviour
     {
         return population.Max(agent => agent.Fitness);
     }
+
+    private void SaveElites()
+    {
+        elitePool.Clear();
+        for (int i = 0; i < numEliteAgents; i++)
+        {
+            switch (typeOfDistance)
+            {
+                case TypeOfDistance.Euclidean:
+                    elitePool.Add(population[i].Dna);
+                    break;
+                case TypeOfDistance.Manhattan:
+                    elitePool.Add(population[i].Dna);
+                    break;
+                case TypeOfDistance.Chebyshev:
+                    elitePool.Add(population[i].Dna);
+                    break;
+            }
+        }
+
+        return;
+    }
 }
+
