@@ -8,6 +8,15 @@ public class Controller : MonoBehaviour
 {
     public static Controller Instance { get; set; }
 
+    public struct Settings
+    {
+        public static int generations = 10;
+        public static int populationSize = 50;
+        public static int movements = 15;
+        public static float mutationProb = 0.05f;
+        public static float speed = 4f;
+    }
+
     public int numAgents;
     public int numMovements;
 
@@ -15,6 +24,8 @@ public class Controller : MonoBehaviour
 
     private float lifecycle;
     private float recordTime;
+
+    
 
     [Space]
     public float mutationChance = 0.05f;
