@@ -106,19 +106,17 @@ public class Population : MonoBehaviour
     {
         matingPool.Clear();
 
-        GetElites();
-
         float maxFitness = GetMaxFitness();
 
         for (int i = 0; i < population.Count; i++)
         {
-            float fitnessNormal = Map(
+            float fitnessNormalized = Map(
                 population[i].Fitness,
                 0,
                 maxFitness,
                 0,
                 1);
-            int n = (int)fitnessNormal * 100;
+            int n = (int)fitnessNormalized * 100;
             for (int j = 0; j < n; j++)
             {
                 matingPool.Add(population[i]);
@@ -126,21 +124,27 @@ public class Population : MonoBehaviour
         }
     }
 
-    private void GetElites()
+    public void SaveElites()
     {
         population = population.OrderByDescending(agent => agent.fitness).ToList();
-        SaveElites();
-        //elitePool = new List<Agent>(population.GetRange(0, numEliteAgents));
-        string s = "";
-
-        for (int i = 0; i < numAgents; i++)
+        elitePool.Clear();
+        for (int i = 0; i < Controller.Settings.elitism; i++)
         {
-            s += $"{population[i].fitness}, ";
+            switch (typeOfDistance)
+            {
+                case TypeOfDistance.Euclidean:
+                    elitePool.Add(population[i].Dna);
+                    break;
+                case TypeOfDistance.Manhattan:
+                    elitePool.Add(population[i].Dna);
+                    break;
+                case TypeOfDistance.Chebyshev:
+                    elitePool.Add(population[i].Dna);
+                    break;
+            }
         }
 
-        Debug.Log(s);
-        s = "";
-
+        return;
     }
 
     public void Reproduction()
@@ -165,7 +169,7 @@ public class Population : MonoBehaviour
 
     public void SetElites(int iteration)
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < Controller.Settings.elitism; i++)
         {
             int index = Random.Range(0, numAgents);
             population[index].Initialize(spawnPoint, targetPoint, elitePool[i]);
@@ -186,26 +190,10 @@ public class Population : MonoBehaviour
         return population.Max(agent => agent.Fitness);
     }
 
-    private void SaveElites()
-    {
-        elitePool.Clear();
-        for (int i = 0; i < numEliteAgents; i++)
-        {
-            switch (typeOfDistance)
-            {
-                case TypeOfDistance.Euclidean:
-                    elitePool.Add(population[i].Dna);
-                    break;
-                case TypeOfDistance.Manhattan:
-                    elitePool.Add(population[i].Dna);
-                    break;
-                case TypeOfDistance.Chebyshev:
-                    elitePool.Add(population[i].Dna);
-                    break;
-            }
-        }
 
-        return;
+    public void RepresentBest()
+    {
+        //TODO
     }
 }
 
