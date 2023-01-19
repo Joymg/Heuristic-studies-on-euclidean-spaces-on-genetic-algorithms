@@ -13,8 +13,8 @@ public class Controller : MonoBehaviour
     {
         public static int generations = 10;
         public static int populationSize = 50;
-        public static int movements = 15;
-        public static int elitism = 3;
+        public static int movements = 50;
+        public static int elitism = 10;
         public static float mutationProb = 0.05f;
         public static float speed = 4f;
     }
@@ -27,7 +27,8 @@ public class Controller : MonoBehaviour
     private float lifecycle;
     private float recordTime;
 
-    
+    public float stopDuration;
+    public float time;
 
     [Space]
     public float mutationChance = 0.05f;
@@ -44,7 +45,7 @@ public class Controller : MonoBehaviour
         Instance = this;
         lifecycle = 0;
         recordTime = float.MaxValue;
-
+        time = stopDuration;
 
         obstacles = FindObjectsOfType<Obstacle>().ToList();
         Time.timeScale = Settings.speed;
@@ -62,11 +63,6 @@ public class Controller : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (numIterations)
-        {
-
-        }
-
         if (population.IsRunning)
         {
             population.Tick();
@@ -78,9 +74,22 @@ public class Controller : MonoBehaviour
         }
         else
         {
+            if (numIterations > Settings.generations)
+            {
+                Time.timeScale = 1;
+                while (time < stopDuration)
+                {
+                    time += Time.unscaledDeltaTime;
+                    return;
+                }
+                time = 0;
+                population.RepresentBest();
+                return;
+            }
+
             population.CalculateFitness();
             population.Selection();
-            population.SaveElites();
+            population.GetElites();
             population.Reproduction();
             population.SetElites(numIterations);
             numIterations++;

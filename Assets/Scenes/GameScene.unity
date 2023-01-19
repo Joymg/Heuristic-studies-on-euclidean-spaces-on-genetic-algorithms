@@ -1168,6 +1168,8 @@ MonoBehaviour:
   numAgents: 10
   numMovements: 400
   numIterations: 0
+  stopDuration: 1.5
+  time: 0
   mutationChance: 0.05
   population: {fileID: 692601150}
   spawn: {fileID: 1648795559}

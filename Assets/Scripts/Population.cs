@@ -124,9 +124,9 @@ public class Population : MonoBehaviour
         }
     }
 
-    public void SaveElites()
+    public void GetElites()
     {
-        population = population.OrderByDescending(agent => agent.fitness).ToList();
+        OrderPopulation();
         elitePool.Clear();
         for (int i = 0; i < Controller.Settings.elitism; i++)
         {
@@ -145,6 +145,11 @@ public class Population : MonoBehaviour
         }
 
         return;
+    }
+
+    private void OrderPopulation()
+    {
+        population = population.OrderByDescending(agent => agent.fitness).ToList();
     }
 
     public void Reproduction()
@@ -193,7 +198,17 @@ public class Population : MonoBehaviour
 
     public void RepresentBest()
     {
-        //TODO
+        OrderPopulation();
+        if (population.Count > 1)
+        {
+            for (int i = numAgents - 1; i >= 1; i--)
+            {
+                Destroy(population[i].gameObject);
+                population.RemoveAt(i);
+            }
+        }
+        
+        population[0].Initialize(spawnPoint, targetPoint, population[0].Dna);
     }
 }
 
