@@ -33,6 +33,11 @@ public class Population : MonoBehaviour
     public GameObject agentManhattanPrefab;
     public GameObject agentChebyshevPrefab;
 
+    private float maxTagetDistance;
+    private float minTargetDistance;
+    private float maxBestDistance;
+    private float minBestDistance;
+
     private float TotalFitness => population.Sum(agent => agent.Fitness);
     public bool IsRunning => population.Any(agent => !agent.Finished);
 
@@ -99,7 +104,22 @@ public class Population : MonoBehaviour
 
     public void CalculateFitness()
     {
-        population.ForEach(agent => agent.CalculateFitness());
+        population = population.OrderBy((x) => x.DistanceToTarget).ToList();
+        minTargetDistance = population[0].DistanceToTarget;
+        maxTagetDistance = population[population.Count - 1].DistanceToTarget;
+
+        population = population.OrderBy((x) => x.BestDistance).ToList();
+        minBestDistance = population[0].BestDistance;
+        maxBestDistance = population[population.Count - 1].BestDistance;
+        string fitnes = "";
+        foreach (Agent agent in population)
+        {
+            agent.NormalizeFinalDistance(maxTagetDistance, minTargetDistance);
+            agent.NormalizeBestDistance(maxBestDistance, minBestDistance);
+            agent.CalculateFitness();
+            fitnes += agent.fitness + " ";
+        }
+        Debug.Log(fitnes);
     }
 
     public void Selection()

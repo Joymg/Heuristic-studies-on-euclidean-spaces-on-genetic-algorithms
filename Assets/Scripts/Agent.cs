@@ -8,7 +8,6 @@ public class Agent : MonoBehaviour
 
     private float speed = 20;
     private float finishTime = 0;
-    private float distanceToTarget;
     private Dna dna;
     public float fitness = 0;
 
@@ -17,11 +16,18 @@ public class Agent : MonoBehaviour
     private bool hitObstacle;
     private bool reachedTarget;
     private bool outOfEnergy;
+
+    private float bestDistance = float.MaxValue;
+    private float distanceToTarget;
+    private float normalizedFinalDistance;
+    private float normalizedBestDistance;
     public bool ReachedTarget => reachedTarget;
+    public float DistanceToTarget => distanceToTarget;
+    public float BestDistance => bestDistance;
 
     public bool Finished => hitObstacle || reachedTarget || outOfEnergy;
 
-    protected Vector2 target ;
+    protected Vector2 target;
     private Vector2 nextStepPosition;
 
     public SpriteRenderer renderer;
@@ -46,16 +52,15 @@ public class Agent : MonoBehaviour
         fitness = 0;
         finishTime = 0;
         distanceToTarget = 0;
+        bestDistance = float.MaxValue;
     }
 
     public void CalculateFitness()
     {
-        fitness = 1 / (finishTime * distanceToTarget);
-
-        fitness = fitness * fitness * fitness * fitness;
+        fitness = 100 * normalizedFinalDistance * normalizedBestDistance;
 
         if (hitObstacle)
-            fitness *= .1f;
+            fitness *= .5f;
         if (reachedTarget)
             fitness *= 4f;
     }
@@ -79,6 +84,11 @@ public class Agent : MonoBehaviour
         {
             nextStepPosition = (Vector2)transform.position + dna.Genes[geneIndex];
             geneIndex++;
+            float distanceToTarget = CalculateDistance();
+            if (distanceToTarget < bestDistance)
+            {
+                bestDistance = distanceToTarget;
+            }
         }
         else
         {
@@ -96,7 +106,7 @@ public class Agent : MonoBehaviour
         {
             reachedTarget = true;
             distanceToTarget = CalculateDistance();
-            CalculateFitness();
+            //CalculateFitness();
         }
         else if (!reachedTarget)
         {
@@ -111,5 +121,15 @@ public class Agent : MonoBehaviour
             hitObstacle = true;
             distanceToTarget = CalculateDistance();
         }
+    }
+
+    public void NormalizeFinalDistance(float maxDistance, float minDistance)
+    {
+        normalizedFinalDistance = 1 - ((distanceToTarget - minDistance) / (maxDistance - minDistance));
+    }
+
+    public void NormalizeBestDistance(float maxDistance, float minDistance)
+    {
+        normalizedBestDistance = 1 - ((bestDistance - minDistance) / (maxDistance - minDistance));
     }
 }

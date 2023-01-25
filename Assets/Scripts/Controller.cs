@@ -74,6 +74,8 @@ public class Controller : MonoBehaviour
         }
         else
         {
+            population.CalculateFitness();
+
             if (numIterations > Settings.generations)
             {
                 Time.timeScale = 1;
@@ -87,7 +89,6 @@ public class Controller : MonoBehaviour
                 return;
             }
 
-            population.CalculateFitness();
             population.Selection();
             population.GetElites();
             population.Reproduction();
