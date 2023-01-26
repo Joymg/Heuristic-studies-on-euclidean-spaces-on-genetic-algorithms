@@ -11,6 +11,7 @@ public class MenuUI : MonoBehaviour
     public TMP_InputField elitism;
     public TMP_InputField mutationProb;
     public TMP_InputField speed;
+    public TMP_Dropdown typeOfDistance;
 
 
     private void Start()
@@ -22,6 +23,7 @@ public class MenuUI : MonoBehaviour
         movements.text = Controller.Settings.movements.ToString();
         elitism.text = Controller.Settings.elitism.ToString();
         speed.text = Controller.Settings.speed.ToString();
+        typeOfDistance.value = (int)Controller.Settings.typeOfDistance;
     }
 
     public void LoadGameScene()
@@ -41,5 +43,6 @@ public class MenuUI : MonoBehaviour
         Controller.Settings.elitism = int.Parse(elitism.text);
         Controller.Settings.mutationProb = float.Parse(mutationProb.text);
         Controller.Settings.speed = float.Parse(speed.text);
+        Controller.Settings.typeOfDistance = (TypeOfDistance)typeOfDistance.value;
     }
 }

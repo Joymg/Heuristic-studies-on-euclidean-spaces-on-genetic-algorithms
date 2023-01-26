@@ -16,6 +16,7 @@ public class Population : MonoBehaviour
 {
     private int numAgents;
     private int numMovements;
+    [SerializeField]
     private float mutationChance;
     private int numEliteAgents = 3;
     private int generations = 0;
@@ -34,9 +35,16 @@ public class Population : MonoBehaviour
     public GameObject agentChebyshevPrefab;
 
     private float TotalFitness => population.Sum(agent => agent.Fitness);
+
+    public int SuccessfulAgents => population.Count(agent => agent.ReachedTarget);
+    public int CrashedAgents => population.Count(agent => agent.HitObstacle);
+    public float RatioOfSuccess => (float) SuccessfulAgents / numAgents;
+    public float AverageFitness => population.Sum(agent => agent.fitness) / numAgents;
+    public float MaxFitness => population.Max(agent => agent.fitness);
+
     public bool IsRunning => population.Any(agent => !agent.Finished);
 
-    public void Initialize(int numAgents, int numMovements, float mutationChance, Transform spawn, Transform target)
+    public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance ,Transform spawn, Transform target)
     {
         population = new List<Agent>();
         matingPool = new List<Agent>();
@@ -45,6 +53,8 @@ public class Population : MonoBehaviour
         this.numAgents = numAgents;
         this.numMovements = numMovements;
         this.mutationChance = mutationChance;
+
+        this.typeOfDistance = typeOfDistance;
 
         spawnPoint = spawn.position;
         targetPoint = target.position;

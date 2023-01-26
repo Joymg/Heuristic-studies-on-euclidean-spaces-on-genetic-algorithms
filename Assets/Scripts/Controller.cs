@@ -17,6 +17,7 @@ public class Controller : MonoBehaviour
         public static int elitism = 10;
         public static float mutationProb = 0.05f;
         public static float speed = 4f;
+        public static TypeOfDistance typeOfDistance = 0;
     }
 
     public int numAgents;
@@ -24,7 +25,7 @@ public class Controller : MonoBehaviour
 
     public int numIterations;
 
-    private float lifecycle;
+    private int lifecycle;
     private float recordTime;
 
     public float stopDuration;
@@ -50,8 +51,10 @@ public class Controller : MonoBehaviour
         obstacles = FindObjectsOfType<Obstacle>().ToList();
         Time.timeScale = Settings.speed;
 
-        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, spawn, target);
+        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
 
+
+        Database.CreateDB();
         StartCoroutine(Wait());
 
     }
@@ -74,7 +77,7 @@ public class Controller : MonoBehaviour
         }
         else
         {
-            if (numIterations > Settings.generations)
+            if (numIterations >= Settings.generations)
             {
                 Time.timeScale = 1;
                 while (time < stopDuration)
@@ -86,8 +89,8 @@ public class Controller : MonoBehaviour
                 population.RepresentBest();
                 return;
             }
-
             population.CalculateFitness();
+            Database.AddIteration(new Database.Database_IterationEntry(numIterations, population.RatioOfSuccess, population.SuccessfulAgents, population.CrashedAgents, lifecycle, population.AverageFitness, population.MaxFitness));
             population.Selection();
             population.GetElites();
             population.Reproduction();

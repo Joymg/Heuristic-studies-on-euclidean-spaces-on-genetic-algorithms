@@ -18,6 +18,7 @@ public class Agent : MonoBehaviour
     private bool reachedTarget;
     private bool outOfEnergy;
     public bool ReachedTarget => reachedTarget;
+    public bool HitObstacle => hitObstacle;
 
     public bool Finished => hitObstacle || reachedTarget || outOfEnergy;
 
