@@ -34,8 +34,9 @@ public class Dna
     public Dna Crossover(Dna partner)
     {
         List<Vector2> child = new List<Vector2>();
+        int padding = (int)Mathf.Floor(Controller.Instance.numMovements * 0.2f); 
 
-        int crossoverIndex = (int)Random.Range(0, Controller.Instance.numMovements);
+        int crossoverIndex = Random.Range(0+ padding, Controller.Instance.numMovements- padding);
 
         for (int i = 0; i < Controller.Instance.numMovements; i++)
         {
