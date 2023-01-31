@@ -99,7 +99,7 @@ public class Agent : MonoBehaviour
 
 
 
-    public void CheckTargetReached()
+    public bool CheckTargetReached()
     {
         float distance = Vector2.Distance(transform.position, target);
 
@@ -107,12 +107,14 @@ public class Agent : MonoBehaviour
         {
             reachedTarget = true;
             distanceToTarget = CalculateDistance();
+            return true;
             //CalculateFitness();
         }
         else if (!reachedTarget)
         {
             finishTime++;
         }
+        return false;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -120,6 +122,7 @@ public class Agent : MonoBehaviour
         if (collision.gameObject.layer == 6)
         {
             hitObstacle = true;
+            Controller.Instance.AgentCrashed?.Invoke();
             distanceToTarget = CalculateDistance();
         }
     }

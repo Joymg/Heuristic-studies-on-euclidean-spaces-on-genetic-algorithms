@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ public class Controller : MonoBehaviour
     [System.Serializable]
     public struct Settings
     {
-        public static int generations = 10;
+        public static int generations = 100;
         public static int populationSize = 50;
         public static int movements = 50;
         public static int elitism = 10;
@@ -41,7 +42,10 @@ public class Controller : MonoBehaviour
 
     public List<Obstacle> obstacles;
 
-    private void Start()
+    public Action IncrementIteration;
+    public Action AgentCrashed;
+
+    private void Awake()
     {
         Instance = this;
         lifecycle = 0;
@@ -95,6 +99,7 @@ public class Controller : MonoBehaviour
             population.GetElites();
             population.Reproduction();
             population.SetElites(numIterations);
+            IncrementIteration?.Invoke();
             numIterations++;
         }
     }
