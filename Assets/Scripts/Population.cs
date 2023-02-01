@@ -136,7 +136,7 @@ public class Population : MonoBehaviour
             agent.CalculateFitness();
             fitnes += agent.fitness + " ";
         }
-        Debug.Log(fitnes);
+        //Debug.Log(fitnes);
     }
 
     public void Selection()

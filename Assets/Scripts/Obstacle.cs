@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider2D))]
@@ -32,6 +33,7 @@ public class Obstacle : MonoBehaviour
         for (int i = 0; i < vertex.Length; i++)
         {
             Gizmos.DrawSphere(vertex[i], .1f);
+            Handles.Label(vertex[i], i.ToString());
             Gizmos.DrawLine(vertex[i], vertex[(i + 1) % vertex.Length]);
         }
 
