@@ -39,6 +39,10 @@ public class Population : MonoBehaviour
     private float maxBestDistance;
     private float minBestDistance;
 
+    public Action AgentArrivedToTarget;
+
+    public int NumMovements=> numMovements;
+
     private float TotalFitness => population.Sum(agent => agent.Fitness);
 
     public int SuccessfulAgents => population.Count(agent => agent.ReachedTarget);
@@ -102,7 +106,10 @@ public class Population : MonoBehaviour
     {
         for (int i = 0; i < population.Count; i++)
         {
-            population[i].CheckTargetReached();
+            if (population[i].CheckTargetReached())
+            {
+                AgentArrivedToTarget?.Invoke();
+            }
             population[i].Tick();
         }
     }

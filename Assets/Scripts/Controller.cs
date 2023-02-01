@@ -1,8 +1,28 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+
+public enum Map
+{
+    DiagonalObstacles,
+    DiagonalObstacles1,
+    DiagonalObstacles2,
+    StraightObstacles,
+    StraightObstacles1,
+    StraightObstacles2,
+}
+
+[System.Serializable]
+public struct MapSelection
+{
+    public Map mapEnum;
+    public GameObject mapObject;
+    public Transform spawn;
+    public Transform target;
+}
 
 public class Controller : MonoBehaviour
 {
@@ -11,13 +31,14 @@ public class Controller : MonoBehaviour
     [System.Serializable]
     public struct Settings
     {
-        public static int generations = 10;
+        public static int generations = 100;
         public static int populationSize = 50;
         public static int movements = 50;
         public static int elitism = 10;
         public static float mutationProb = 0.05f;
         public static float speed = 4f;
         public static TypeOfDistance typeOfDistance = 0;
+        public static Map map = 0;
     }
 
     public int numAgents;
@@ -40,8 +61,12 @@ public class Controller : MonoBehaviour
     public Transform target;
 
     public List<Obstacle> obstacles;
+    public List<MapSelection> maps;
 
-    private void Start()
+    public Action IncrementIteration;
+    public Action AgentCrashed;
+
+    private void Awake()
     {
         Instance = this;
         lifecycle = 0;
@@ -50,6 +75,11 @@ public class Controller : MonoBehaviour
 
         obstacles = FindObjectsOfType<Obstacle>().ToList();
         Time.timeScale = Settings.speed;
+
+        MapSelection mapSelected = maps.Find(x => x.mapEnum == Settings.map);
+        mapSelected.mapObject.SetActive(true);
+        spawn = mapSelected.spawn;
+        target = mapSelected.target;
 
         population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
 
@@ -95,6 +125,7 @@ public class Controller : MonoBehaviour
             population.GetElites();
             population.Reproduction();
             population.SetElites(numIterations);
+            IncrementIteration?.Invoke();
             numIterations++;
         }
     }

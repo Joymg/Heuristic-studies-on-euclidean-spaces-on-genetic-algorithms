@@ -6,9 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/StraightObstacles.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
-  - enabled: 1
     path: Assets/Scenes/Menu.unity
     guid: b097d823d790a9c4791bdb5059d65f4b
+  - enabled: 1
+    path: Assets/Scenes/Maps.unity
+    guid: a7243bc8718b4e942b03652a668357ed
   m_configObjects: {}
