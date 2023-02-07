@@ -92,11 +92,13 @@ public class Controller : MonoBehaviour
         recordTime = float.MaxValue;
         time = stopDuration;
 
-        obstacles = FindObjectsOfType<Obstacle>().ToList();
         Time.timeScale = Settings.speed;
 
         MapSelection mapSelected = maps.Find(x => x.mapEnum == Settings.map);
         mapSelected.mapObject.SetActive(true);
+
+        obstacles = FindObjectsOfType<Obstacle>().ToList();
+
         spawn = mapSelected.spawn;
         target = mapSelected.target;
 
@@ -211,11 +213,11 @@ public class Controller : MonoBehaviour
         LineB[0] = B.position;
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(A.position, .1f);
-        Gizmos.DrawSphere(B.position, .1f);
-        Gizmos.DrawLine(A.position, B.position);
-    }
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.red;
+    //    Gizmos.DrawSphere(A.position, .1f);
+    //    Gizmos.DrawSphere(B.position, .1f);
+    //    Gizmos.DrawLine(A.position, B.position);
+    //}
 }
