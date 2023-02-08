@@ -1,11 +1,11 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class MenuUI : MonoBehaviour
 {
-    public TMP_InputField generations;
+    public TMP_InputField iterations;
+    public TMP_InputField learningPeriod;
     public TMP_InputField populationSize;
     public TMP_InputField movements;
     public TMP_InputField elitism;
@@ -18,7 +18,8 @@ public class MenuUI : MonoBehaviour
     private void Start()
     {
         // initialize input fields with default values
-        generations.text = Controller.Settings.generations.ToString();
+        iterations.text = Controller.Settings.iterations.ToString();
+        //learningPeriod.text = Controller.Settings.learningPeriod.ToString();
         populationSize.text = Controller.Settings.populationSize.ToString();
         mutationProb.text = Controller.Settings.mutationProb.ToString();
         movements.text = Controller.Settings.movements.ToString();
@@ -39,7 +40,8 @@ public class MenuUI : MonoBehaviour
 
     private void SetSettings()
     {
-        Controller.Settings.generations = int.Parse(generations.text);
+        Controller.Settings.iterations = int.Parse(iterations.text);
+        //Controller.Settings.learningPeriod = int.Parse(learningPeriod.text);
         Controller.Settings.populationSize = int.Parse(populationSize.text);
         Controller.Settings.movements = int.Parse(movements.text);
         Controller.Settings.elitism = int.Parse(elitism.text);

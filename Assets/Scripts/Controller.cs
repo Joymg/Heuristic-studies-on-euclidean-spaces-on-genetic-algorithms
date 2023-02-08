@@ -31,7 +31,8 @@ public class Controller : MonoBehaviour
     [System.Serializable]
     public struct Settings
     {
-        public static int generations = 100;
+        public static int iterations = 100;
+        public static int learningPeriod = 5;
         public static int populationSize = 50;
         public static int movements = 50;
         public static int elitism = 10;
@@ -44,10 +45,7 @@ public class Controller : MonoBehaviour
     public int numAgents;
     public int numMovements;
 
-    public int numIterations;
-
-    private int lifecycle;
-    private float recordTime;
+    public int numIterations = 1;
 
     public float stopDuration;
     public float time;
@@ -88,9 +86,8 @@ public class Controller : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        lifecycle = 0;
-        recordTime = float.MaxValue;
         time = stopDuration;
+        numIterations = 1;
 
         obstacles = FindObjectsOfType<Obstacle>().ToList();
         Time.timeScale = Settings.speed;
@@ -115,21 +112,16 @@ public class Controller : MonoBehaviour
 
     private void FixedUpdate()
     {
-        CPUTester.Calculate(LineA[0], LineB[0], obstacle[0]);
-        ComputeShader();
+        //CPUTester.Calculate(LineA[0], LineB[0], obstacle[0]);
+        //ComputeShader();
 
         if (population.IsRunning)
         {
             population.Tick();
-            if (population.TargetReached() && lifecycle < recordTime)
-            {
-                recordTime = lifecycle;
-            }
-            lifecycle++;
         }
         else
         {
-            if (numIterations >= Settings.generations)
+            if (numIterations >= Settings.iterations)
             {
                 Time.timeScale = 1;
                 while (time < stopDuration)
@@ -141,17 +133,13 @@ public class Controller : MonoBehaviour
                 population.RepresentBest();
                 return;
             }
-            population.CalculateFitness();
-            Database.AddIteration(new Database.Database_IterationEntry(numIterations, population.RatioOfSuccess, population.SuccessfulAgents, population.CrashedAgents, lifecycle, population.AverageFitness, population.MaxFitness));
-            population.Selection();
-            population.GetElites();
-            population.Reproduction();
-            population.SetElites(numIterations);
+
+            population.NextGeneration();
+
             IncrementIteration?.Invoke();
             numIterations++;
         }
     }
-
 
     private void ComputeShader()
     {
@@ -211,11 +199,11 @@ public class Controller : MonoBehaviour
         LineB[0] = B.position;
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(A.position, .1f);
-        Gizmos.DrawSphere(B.position, .1f);
-        Gizmos.DrawLine(A.position, B.position);
-    }
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.red;
+    //    Gizmos.DrawSphere(A.position, .1f);
+    //    Gizmos.DrawSphere(B.position, .1f);
+    //    Gizmos.DrawLine(A.position, B.position);
+    //}
 }

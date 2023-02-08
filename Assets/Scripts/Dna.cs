@@ -34,9 +34,9 @@ public class Dna
     public Dna Crossover(Dna partner)
     {
         List<Vector2> child = new List<Vector2>();
-        int padding = (int)Mathf.Floor(Controller.Instance.numMovements * 0.2f); 
+        int padding = (int)Mathf.Floor(Controller.Instance.numMovements * 0.2f);
 
-        int crossoverIndex = Random.Range(0+ padding, Controller.Instance.numMovements- padding);
+        int crossoverIndex = Random.Range(0 + padding, Controller.Instance.numMovements - padding);
 
         for (int i = 0; i < Controller.Instance.numMovements; i++)
         {
@@ -59,5 +59,38 @@ public class Dna
                 Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized * .5f;
             }
         }
+    }
+}
+
+[System.Serializable]
+public class EliteDna
+{
+    public EliteDna(Agent agent)
+    {
+        dna = agent.Dna;
+        bestDistance = agent.BestDistance;
+        distanceToTarget = agent.DistanceToTarget;
+        hitObstacle = agent.HitObstacle;
+        arrivedToTarget = agent.ReachedTarget;
+    }
+    public Dna dna;
+    public float bestDistance;
+    public float distanceToTarget;
+    public bool hitObstacle;
+    public bool arrivedToTarget;
+
+    public float normalizedBestDistance;
+    public float normalizedDistanceToTarget;
+
+    public float fitness;
+
+    public void CalculateFitness()
+    {
+        fitness = 100 * normalizedDistanceToTarget * normalizedBestDistance;
+
+        if (hitObstacle)
+            fitness *= .5f;
+        if (arrivedToTarget)
+            fitness *= 4f;
     }
 }

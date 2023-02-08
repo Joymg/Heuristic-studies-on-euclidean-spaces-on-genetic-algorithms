@@ -36,6 +36,18 @@ public class Agent : MonoBehaviour
     public float Fitness => fitness;
     public Dna Dna => dna;
 
+    public float NormalizedDistanceToTarget
+    {
+        get { return normalizedFinalDistance; }
+        set { normalizedFinalDistance = value; }
+    }
+
+    public float NormalizedBestDistance
+    {
+        get { return normalizedBestDistance; }
+        set { normalizedBestDistance = value; }
+    }
+
     public void Initialize(Vector2 spawn, Vector2 target, Dna dna)
     {
         Reset();
@@ -125,15 +137,5 @@ public class Agent : MonoBehaviour
             Controller.Instance.AgentCrashed?.Invoke();
             distanceToTarget = CalculateDistance();
         }
-    }
-
-    public void NormalizeFinalDistance(float maxDistance, float minDistance)
-    {
-        normalizedFinalDistance = 1 - ((distanceToTarget - minDistance) / (maxDistance - minDistance));
-    }
-
-    public void NormalizeBestDistance(float maxDistance, float minDistance)
-    {
-        normalizedBestDistance = 1 - ((bestDistance - minDistance) / (maxDistance - minDistance));
     }
 }

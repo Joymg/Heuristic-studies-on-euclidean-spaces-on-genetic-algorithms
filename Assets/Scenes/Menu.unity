@@ -2294,7 +2294,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd4211af5adeedc4aaf2b0bd679c2dc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generations: {fileID: 1225415761}
+  iterations: {fileID: 1225415761}
+  learningPeriod: {fileID: 0}
   populationSize: {fileID: 1291066036}
   movements: {fileID: 1829558432}
   elitism: {fileID: 499749627}
