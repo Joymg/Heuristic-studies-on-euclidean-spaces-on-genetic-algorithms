@@ -14,7 +14,6 @@ public class SimulationPanelController : MonoBehaviour
     public TextMeshProUGUI firstArrivedNumber;
 
     Population population;
-    Controller controller;
 
     int iterationNum;
     int agentsArrived;
@@ -89,7 +88,8 @@ public class SimulationPanelController : MonoBehaviour
     {
         if (!didFirstAgentArrived)
         {
-            firstArrivedNumber.text = iterationNum.ToString();
+            firstArrived= iterationNum;
+            firstArrivedNumber.text = firstArrived.ToString();
             didFirstAgentArrived = true;
         }
     }

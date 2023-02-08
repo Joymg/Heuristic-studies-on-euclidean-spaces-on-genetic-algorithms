@@ -89,11 +89,13 @@ public class Controller : MonoBehaviour
         time = stopDuration;
         numIterations = 1;
 
-        obstacles = FindObjectsOfType<Obstacle>().ToList();
         Time.timeScale = Settings.speed;
 
         MapSelection mapSelected = maps.Find(x => x.mapEnum == Settings.map);
         mapSelected.mapObject.SetActive(true);
+
+        obstacles = FindObjectsOfType<Obstacle>().ToList();
+
         spawn = mapSelected.spawn;
         target = mapSelected.target;
 
