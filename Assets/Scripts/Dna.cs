@@ -5,13 +5,13 @@ using UnityEngine;
 [System.Serializable]
 public class Dna
 {
+    public List<Vector2> Genes;
+    public List<Vector2> Lines;
+
     public Dna(Dna copydna)
     {
         Genes = new List<Vector2>(copydna.Genes);
     }
-
-
-    public List<Vector2> Genes;
 
     public Dna(List<Vector2> newGenes = null)
     {
@@ -24,10 +24,14 @@ public class Dna
             Genes = new List<Vector2>();
             for (int i = 0; i < Controller.Instance.numMovements; i++)
             {
-                Genes.Add(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized * .5f);
+                Genes.Add(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized );
             }
         }
+
+        GenerateGPUData();
     }
+
+
 
     // CROSSOVER
     // Creates new DNA sequence from two (this & and a partner)
@@ -56,8 +60,19 @@ public class Dna
         {
             if (Random.Range(0, 1f) < Controller.Instance.mutationChance)
             {
-                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized * .5f;
+                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized ;
             }
+        }
+    } 
+    
+    private void GenerateGPUData()
+    {
+        Lines = new List<Vector2>();
+        Vector2 initialPosition = (Vector2)Controller.Instance.spawn.transform.position;
+        for (int i = 0; i < Genes.Count; i++)
+        {
+            Lines.Add(initialPosition);
+            initialPosition = initialPosition + Genes[i];
         }
     }
 }

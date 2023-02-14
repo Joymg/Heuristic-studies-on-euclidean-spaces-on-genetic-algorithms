@@ -3,14 +3,36 @@
 
 struct Obstacle
 {
-    float2 x;
-    float2 y;
-    float2 z;
-    float2 w;
+    float2 a;
+    float2 b;
+    float2 c;
+    float2 d;
 };
 
-RWStructuredBuffer<int> collides;
-RWStructuredBuffer<Obstacle> obstacle;
+struct Line
+{
+    float2 u;
+    float2 v;
+};
+
+
+//Controller Data
+int num_movements;
+int num_agents;
+int num_obstacle;
+
+
+RWStructuredBuffer<Line> agentsPathLines;
+RWStructuredBuffer<float2> collisionPoints;
+
+
+RWStructuredBuffer<Obstacle> obstacles;
+
+RWStructuredBuffer<int> hasAgentCrashed;
+RWStructuredBuffer<int> indexOfFirstCollision;
+
+RWStructuredBuffer<float2> lastAgentValidPosition;
+
 RWStructuredBuffer<float2> lineA;
 RWStructuredBuffer<float2> lineB;
 
@@ -24,8 +46,8 @@ bool _lineLine(float2 a1, float2 a2, float2 b1, float2 b2, out float2 collision)
 
     // if uA and uB are between 0-1, lines are colliding
     bool hit = uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
-    if (hit)
-        collision = float2(a1.x + (uA * (b1.x - a1.x)), a1.y + (uA * (b1.y - a1.y)));
+    collision = hit ? float2(a1.x + (uA * (b1.x - a1.x)), a1.y + (uA * (b1.y - a1.y))) : float2(0, 0);
+        
     return hit;
 }
 
@@ -49,15 +71,50 @@ bool _lineRect(float2 u, float2 v, float2 a, float2 b, float2 c, float2 d, out f
     return false;
 }
 
+// returns true if the line intersects the rect, and populates the collision point. 
+// http://www.jeffreythompson.org/collision-detection/line-rect.php
+bool _lineRect(Line l, Obstacle o, out float2 collision)
+{
+    bool left = _lineLine(l.u, l.v, o.a, o.b, collision);
+    if (left)
+        return true;
+    bool right = _lineLine(l.u, l.v, o.b, o.c, collision);
+    if (right)
+        return true;
+    bool top = _lineLine(l.u, l.v, o.c, o.d, collision);
+    if (top)
+        return true;
+    bool bottom = _lineLine(l.u, l.v, o.d, o.a, collision);
+    if (bottom)
+        return true;
+
+    return false;
+}
+
 [numthreads(8, 8, 1)]
 void LineCollides(uint3 id : SV_DispatchThreadID)
 {
-
-    float2 collision;
-    if (_lineRect(lineA[id.x], lineB[id.x], obstacle[id.x].x, obstacle[id.x].y, obstacle[id.x].z, obstacle[id.x].w, collision))
-    {
-        collides[id.x] = 1;
-    }
+    //x -> Agents, y -> movements, z -> Obstacles
     
- 
+    if ((int) id.x < num_agents && (int) id.y < num_movements && (int) id.z < num_obstacle * 4)
+    {
+        int currentAgentLineIndex = (int) id.x * num_movements + (int) id.y;
+        bool intersects = _lineRect(
+        agentsPathLines[currentAgentLineIndex],
+        obstacles[id.z],
+        collisionPoints[id.x]);
+        //bool intersects = _lineRect(lineA[id.x], lineB[id.x], obstacle[id.x].a, obstacle[id.x].b, obstacle[id.x].c, obstacle[id.x].d, collision);
+        
+        bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || intersects) ? true : false;
+        
+        hasAgentCrashed[id.x] = hasIntersected ? 1 : 0;
+        
+        bool improves = (int) id.y < indexOfFirstCollision[id.x];
+        
+        indexOfFirstCollision[id.x] = intersects && improves ? id.y : indexOfFirstCollision[id.x];
+        
+        lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
+        
+    }
 }
+

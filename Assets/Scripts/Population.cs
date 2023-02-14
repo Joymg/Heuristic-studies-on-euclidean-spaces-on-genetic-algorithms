@@ -55,7 +55,9 @@ public class Population : MonoBehaviour
 
     public bool IsRunning => population.Any(agent => !agent.Finished);
 
-    public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance, Transform spawn, Transform target)
+    public List<Agent> AgentList => population; 
+
+    public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance ,Transform spawn, Transform target)
     {
         population = new List<Agent>();
         matingPool = new List<Agent>();

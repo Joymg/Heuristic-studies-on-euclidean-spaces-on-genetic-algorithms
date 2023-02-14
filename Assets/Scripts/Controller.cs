@@ -37,7 +37,7 @@ public class Controller : MonoBehaviour
         public static int movements = 50;
         public static int elitism = 10;
         public static float mutationProb = 0.05f;
-        public static float speed = 4f;
+        public static float speed = 1f;
         public static TypeOfDistance typeOfDistance = 0;
         public static Map map = 0;
     }
@@ -51,7 +51,9 @@ public class Controller : MonoBehaviour
     public float time;
 
     [Space]
-    public float mutationChance = 0.05f;
+    public bool useGPU = true;
+    public bool useCPU = true;
+
 
     public Population population;
 
@@ -65,29 +67,18 @@ public class Controller : MonoBehaviour
     public Action AgentCrashed;
 
 
-    [Header("Temp")]
-    public int[] collides;
-    public Transform A;
-    public Transform B;
-    public Vector2[] LineA;
-    public Vector2[] LineB;
-    public Obs[] obstacle;
-    public Obstacle obs;
-    private ComputeShader computeShader;
+    public Vector2[] collisionsGPU;
+    public Vector2[] collisionsCPU;
 
-    [System.Serializable]
-    public struct Obs
-    {
-        public Vector2 x;
-        public Vector2 y;
-        public Vector2 z;
-        public Vector2 w;
-    }
     private void Awake()
     {
         Instance = this;
         time = stopDuration;
         numIterations = 1;
+
+        numAgents = Settings.populationSize;
+        numMovements = Settings.movements;
+        mutationChance = Settings.mutationProb;
 
         Time.timeScale = Settings.speed;
 
@@ -110,12 +101,30 @@ public class Controller : MonoBehaviour
     private IEnumerator Wait()
     {
         yield return new WaitForSecondsRealtime(2f);
+        CPUTester.isCalculating = false;
+        GPUCalculator.isCalculating = false;
     }
 
     private void FixedUpdate()
     {
-        //CPUTester.Calculate(LineA[0], LineB[0], obstacle[0]);
-        //ComputeShader();
+        if (useGPU)
+        {
+            if (!GPUCalculator.isCalculating)
+            {
+                GPUCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+                //StartCoroutine(Wait());
+            }
+        }
+
+        if (useCPU)
+        {
+            if (!CPUTester.isCalculating)
+            {
+                CPUTester.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+
+               //StartCoroutine(Wait());
+            }
+        }
 
         if (population.IsRunning)
         {
@@ -140,72 +149,27 @@ public class Controller : MonoBehaviour
 
             IncrementIteration?.Invoke();
             numIterations++;
+
+            CPUTester.isCalculating = false;
+            GPUCalculator.isCalculating = false;
         }
     }
 
-    private void ComputeShader()
+    private void OnDrawGizmos()
     {
-        int boolID = Shader.PropertyToID("collides");
-        int obstacleID = Shader.PropertyToID("obstacle");
-        int lineAID = Shader.PropertyToID("lineA");
-        int lineBID = Shader.PropertyToID("lineB");
-
-        computeShader = Resources.Load<ComputeShader>("ComputeShaders/Physics");
-        int index = computeShader.FindKernel("LineCollides");
-
-        ComputeBuffer lineABuffer = new ComputeBuffer(1, sizeof(float) * 2);
-        lineABuffer.SetData(LineA);
-        computeShader.SetBuffer(index, lineAID, lineABuffer);
-
-        ComputeBuffer lineBBuffer = new ComputeBuffer(1, sizeof(float) * 2);
-        lineBBuffer.SetData(LineB);
-        computeShader.SetBuffer(index, lineBID, lineBBuffer);
-
-        ComputeBuffer ObstacleBuffer = new ComputeBuffer(1, sizeof(float) * 2 * 4);
-        ObstacleBuffer.SetData(obstacle);
-        computeShader.SetBuffer(index, obstacleID, ObstacleBuffer);
-
-        ComputeBuffer boolBuffer = new ComputeBuffer(1, sizeof(int));
-        boolBuffer.SetData(collides);
-        computeShader.SetBuffer(index, boolID, boolBuffer);
-
-        computeShader.Dispatch(index, 1, 1, 1);
-
-        boolBuffer.GetData(collides);
-
-        lineABuffer.Dispose();
-        lineBBuffer.Dispose();
-        ObstacleBuffer.Dispose();
-        boolBuffer.Dispose();
-
-        Debug.Log($"GPU: {collides[0]}");
-        collides[0] = 0;
-    }
-
-    [ContextMenu("SetObstacle")]
-    public void Obstacle()
-    {
-        obstacle[0] = new Obs
+        for (int i = 0; i < collisionsGPU.Length; i++)
         {
-            x = obs.vertex[0],
-            y = obs.vertex[1],
-            z = obs.vertex[2],
-            w = obs.vertex[3]
-        };
-    }
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(collisionsGPU[i], 0.2f);
 
-    [ContextMenu("SetVectors")]
-    public void Vector()
-    {
-        LineA[0] = A.position;
-        LineB[0] = B.position;
-    }
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(collisionsCPU[i], 0.2f);
+        }
 
-    //private void OnDrawGizmos()
-    //{
-    //    Gizmos.color = Color.red;
-    //    Gizmos.DrawSphere(A.position, .1f);
-    //    Gizmos.DrawSphere(B.position, .1f);
-    //    Gizmos.DrawLine(A.position, B.position);
-    //}
+        for (int i = 0; i < CPUTester.agentsPathLines.Length; i++)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(CPUTester.agentsPathLines[i].u, CPUTester.agentsPathLines[i].v);
+        }
+    }
 }

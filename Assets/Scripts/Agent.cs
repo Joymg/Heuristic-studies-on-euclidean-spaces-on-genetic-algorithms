@@ -30,6 +30,7 @@ public class Agent : MonoBehaviour
 
     protected Vector2 target;
     private Vector2 nextStepPosition;
+    public int lastStep;
 
     public SpriteRenderer renderer;
 
@@ -66,6 +67,8 @@ public class Agent : MonoBehaviour
         finishTime = 0;
         distanceToTarget = 0;
         bestDistance = float.MaxValue;
+
+        lastStep = 0;
     }
 
     public void CalculateFitness()
@@ -90,13 +93,14 @@ public class Agent : MonoBehaviour
         {
             distanceToTarget = CalculateDistance();
             outOfEnergy = true;
+            lastStep = geneIndex - 1;
             return;
         }
 
         if ((Vector2)transform.position == nextStepPosition)
         {
-            nextStepPosition = (Vector2)transform.position + dna.Genes[geneIndex];
             geneIndex++;
+            nextStepPosition = (Vector2)transform.position + dna.Genes[geneIndex];
             float distanceToTarget = CalculateDistance();
             if (distanceToTarget < bestDistance)
             {
@@ -119,6 +123,7 @@ public class Agent : MonoBehaviour
         {
             reachedTarget = true;
             distanceToTarget = CalculateDistance();
+            lastStep = geneIndex;
             return true;
             //CalculateFitness();
         }
@@ -136,6 +141,7 @@ public class Agent : MonoBehaviour
             hitObstacle = true;
             Controller.Instance.AgentCrashed?.Invoke();
             distanceToTarget = CalculateDistance();
+            lastStep = geneIndex;
         }
     }
 }
