@@ -25,7 +25,8 @@ public class Population : MonoBehaviour
     private Vector2 targetPoint;
 
     private List<Agent> population;
-    private List<Agent> matingPool;
+    //private List<Agent> matingPool;
+    private List<EliteDna> matingPool;
 
     public TypeOfDistance typeOfDistance;
     public List<EliteDna> currentElite;
@@ -58,7 +59,7 @@ public class Population : MonoBehaviour
     public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance, Transform spawn, Transform target)
     {
         population = new List<Agent>();
-        matingPool = new List<Agent>();
+        matingPool = new List<EliteDna>();
         elitePool = new List<Dna>();
         learningPeriodAccumulatedElite = new List<EliteDna>();
         currentElite = new List<EliteDna>();
@@ -139,8 +140,8 @@ public class Population : MonoBehaviour
 
         CalculateFitness();
         Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MaxFitness));
-        Selection();
         GetElites();
+        Selection();
         Reproduction();
         SetElites();
     }
@@ -154,12 +155,15 @@ public class Population : MonoBehaviour
         learningPeriodAccumulatedElite = learningPeriodAccumulatedElite.OrderBy((x) => x.bestDistance).ToList();
         minBestDistance = learningPeriodAccumulatedElite[0].bestDistance;
         maxBestDistance = learningPeriodAccumulatedElite[learningPeriodAccumulatedElite.Count - 1].bestDistance;
+
         foreach (EliteDna eliteDna in learningPeriodAccumulatedElite)
         {
             eliteDna.normalizedDistanceToTarget = MathAuxiliar.NormalizeValue(minTargetDistance, maxTagetDistance, eliteDna.distanceToTarget);
             eliteDna.normalizedBestDistance = MathAuxiliar.NormalizeValue(minBestDistance, maxBestDistance, eliteDna.bestDistance);
             eliteDna.CalculateFitness();
         }
+
+        learningPeriodAccumulatedElite = learningPeriodAccumulatedElite.OrderBy((x) => x.fitness).ToList();
     }
 
 
@@ -184,12 +188,12 @@ public class Population : MonoBehaviour
     {
         matingPool.Clear();
 
-        float maxFitness = GetMaxFitness();
+        float maxFitness = currentElite.Max(agent => agent.fitness);
 
-        for (int i = 0; i < population.Count; i++)
+        for (int i = 0; i < currentElite.Count; i++)
         {
             float fitnessNormalized = Map(
-                population[i].Fitness,
+                currentElite[i].fitness,
                 0,
                 maxFitness,
                 0,
@@ -197,30 +201,36 @@ public class Population : MonoBehaviour
             int n = (int)fitnessNormalized * 100;
             for (int j = 0; j < n; j++)
             {
-                matingPool.Add(population[i]);
+                matingPool.Add(currentElite[i]);
             }
         }
     }
 
+    //public void SelectionOld()
+    //{
+    //    matingPool.Clear();
+
+    //    float maxFitness = GetMaxFitness();
+
+    //    for (int i = 0; i < population.Count; i++)
+    //    {
+    //        float fitnessNormalized = Map(
+    //            population[i].Fitness,
+    //            0,
+    //            maxFitness,
+    //            0,
+    //            1);
+    //        int n = (int)fitnessNormalized * 100;
+    //        for (int j = 0; j < n; j++)
+    //        {
+    //            matingPool.Add(population[i]);
+    //        }
+    //    }
+    //}
+
     public void GetElites()
     {
         OrderPopulation();
-        //elitePool.Clear();
-        //for (int i = 0; i < Controller.Settings.elitism; i++)
-        //{
-        //    switch (typeOfDistance)
-        //    {
-        //        case TypeOfDistance.Euclidean:
-        //            elitePool.Add(population[i].Dna);
-        //            break;
-        //        case TypeOfDistance.Manhattan:
-        //            elitePool.Add(population[i].Dna);
-        //            break;
-        //        case TypeOfDistance.Chebyshev:
-        //            elitePool.Add(population[i].Dna);
-        //            break;
-        //    }
-        //}
 
         for (int i = 0; i < Controller.Settings.elitism; i++)
         {
@@ -234,6 +244,26 @@ public class Population : MonoBehaviour
         population = population.OrderByDescending(agent => agent.fitness).ToList();
     }
 
+    //public void ReproductionOld()
+    //{
+    //    for (int i = 0; i < population.Count; i++)
+    //    {
+    //        int index1 = Random.Range(0, matingPool.Count);
+    //        int index2 = Random.Range(0, matingPool.Count);
+
+    //        Agent parent1 = matingPool[index1];
+    //        Agent parent2 = matingPool[index2];
+
+    //        Dna child = parent1.Dna.Crossover(parent2.Dna);
+
+    //        child.Mutate();
+
+    //        population[i].Initialize(spawnPoint, targetPoint, child);
+    //        population[i].renderer.color = Color.red;
+    //        population[i].renderer.sortingOrder = 0;
+    //    }
+    //}
+
     public void Reproduction()
     {
         for (int i = 0; i < population.Count; i++)
@@ -241,10 +271,10 @@ public class Population : MonoBehaviour
             int index1 = Random.Range(0, matingPool.Count);
             int index2 = Random.Range(0, matingPool.Count);
 
-            Agent parent1 = matingPool[index1];
-            Agent parent2 = matingPool[index2];
+            EliteDna parent1 = matingPool[index1];
+            EliteDna parent2 = matingPool[index2];
 
-            Dna child = parent1.Dna.Crossover(parent2.Dna);
+            Dna child = parent1.dna.Crossover(parent2.dna);
 
             child.Mutate();
 
