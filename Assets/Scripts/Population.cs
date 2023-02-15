@@ -128,6 +128,10 @@ public class Population : MonoBehaviour
 
     public void NextGeneration()
     {
+        CalculateFitness();
+        Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MaxFitness));
+        GetElites();
+
         //Time to learn so we take the numElites best from the nextElites list (calculate fitness first), save them in currentElite,
         //clear next elite and then continue with the next generation as normal
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
@@ -139,13 +143,19 @@ public class Population : MonoBehaviour
             learningPeriodAccumulatedElite.Clear();
         }
 
-
-        CalculateFitness();
-        Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MaxFitness));
-        GetElites();
-        Selection();
-        Reproduction();
-        SetElites();
+        if (currentElite.Count == 0) //First learning period, initialize agents with random paths
+        {
+            foreach (Agent agent in population)
+            {
+                agent.Initialize(spawnPoint, targetPoint, new Dna());
+            }
+        }
+        else
+        {
+            Selection();
+            Reproduction();
+            //SetElites();
+        }
     }
 
     private void CalculateNextElitesFitness()
