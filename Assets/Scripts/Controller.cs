@@ -32,7 +32,7 @@ public class Controller : MonoBehaviour
     public struct Settings
     {
         public static int iterations = 100;
-        public static int learningPeriod = 5;
+        public static int learningPeriod = 2;
         public static int populationSize = 50;
         public static int movements = 50;
         public static int elitism = 10;
@@ -46,6 +46,8 @@ public class Controller : MonoBehaviour
     public int numMovements;
 
     public int numIterations = 1;
+
+    public float mutationChance;
 
     public float stopDuration;
     public float time;
@@ -79,7 +81,6 @@ public class Controller : MonoBehaviour
         numAgents = Settings.populationSize;
         numMovements = Settings.movements;
         mutationChance = Settings.mutationProb;
-
         Time.timeScale = Settings.speed;
 
         MapSelection mapSelected = maps.Find(x => x.mapEnum == Settings.map);
@@ -155,21 +156,21 @@ public class Controller : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
-    {
-        for (int i = 0; i < collisionsGPU.Length; i++)
-        {
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawSphere(collisionsGPU[i], 0.2f);
+    //private void OnDrawGizmos()
+    //{
+    //    for (int i = 0; i < collisionsGPU.Length; i++)
+    //    {
+    //        Gizmos.color = Color.magenta;
+    //        Gizmos.DrawSphere(collisionsGPU[i], 0.2f);
 
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(collisionsCPU[i], 0.2f);
-        }
+    //        Gizmos.color = Color.yellow;
+    //        Gizmos.DrawSphere(collisionsCPU[i], 0.2f);
+    //    }
 
-        for (int i = 0; i < CPUTester.agentsPathLines.Length; i++)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(CPUTester.agentsPathLines[i].u, CPUTester.agentsPathLines[i].v);
-        }
-    }
+    //    for (int i = 0; i < CPUTester.agentsPathLines.Length; i++)
+    //    {
+    //        Gizmos.color = Color.green;
+    //        Gizmos.DrawLine(CPUTester.agentsPathLines[i].u, CPUTester.agentsPathLines[i].v);
+    //    }
+    //}
 }

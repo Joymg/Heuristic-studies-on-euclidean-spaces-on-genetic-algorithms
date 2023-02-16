@@ -88,7 +88,7 @@ public static class CPUTester
         }
 
 
-        Debug.Log("ready");
+        //Debug.Log("ready");
 
         Controller.Instance.collisionsCPU = lastAgentValidPosition;
         //isCalculating = false;

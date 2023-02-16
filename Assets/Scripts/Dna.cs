@@ -83,11 +83,9 @@ public class EliteDna
     public EliteDna(Agent agent)
     {
         dna = agent.Dna;
-        bestDistance = agent.BestDistance;
-        distanceToTarget = agent.DistanceToTarget;
-        hitObstacle = agent.HitObstacle;
-        arrivedToTarget = agent.ReachedTarget;
+        fitness = agent.fitness;
     }
+
     public Dna dna;
     public float bestDistance;
     public float distanceToTarget;
@@ -98,14 +96,4 @@ public class EliteDna
     public float normalizedDistanceToTarget;
 
     public float fitness;
-
-    public void CalculateFitness()
-    {
-        fitness = 100 * normalizedDistanceToTarget * normalizedBestDistance;
-
-        if (hitObstacle)
-            fitness *= .5f;
-        if (arrivedToTarget)
-            fitness *= 4f;
-    }
 }

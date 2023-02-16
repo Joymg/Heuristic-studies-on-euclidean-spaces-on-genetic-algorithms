@@ -136,7 +136,8 @@ public class Population : MonoBehaviour
         //clear next elite and then continue with the next generation as normal
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
         {
-            CalculateNextElitesFitness();
+            Debug.Log("aprendo");
+            //CalculateNextElitesFitness();
             currentElite.Clear();
 
             currentElite.AddRange(learningPeriodAccumulatedElite.GetRange(0, Controller.Settings.elitism));
@@ -145,6 +146,7 @@ public class Population : MonoBehaviour
 
         if (currentElite.Count == 0) //First learning period, initialize agents with random paths
         {
+            Debug.Log("random");
             foreach (Agent agent in population)
             {
                 agent.Initialize(spawnPoint, targetPoint, new Dna());
@@ -154,7 +156,7 @@ public class Population : MonoBehaviour
         {
             Selection();
             Reproduction();
-            //SetElites();
+            SetElites();
         }
     }
 
@@ -179,7 +181,7 @@ public class Population : MonoBehaviour
     }
 
 
-    public void CalculateFitness()
+    public void CalculateFitnessOld()
     {
         population = population.OrderBy((x) => x.DistanceToTarget).ToList();
         minTargetDistance = population[0].DistanceToTarget;
@@ -192,6 +194,14 @@ public class Population : MonoBehaviour
         {
             agent.NormalizedDistanceToTarget = MathAuxiliar.NormalizeValue(minTargetDistance, maxTagetDistance, agent.DistanceToTarget);
             agent.NormalizedBestDistance = MathAuxiliar.NormalizeValue(minBestDistance, maxBestDistance, agent.BestDistance);
+            agent.CalculateFitness();
+        }
+    }
+
+    public void CalculateFitness()
+    {
+        foreach (Agent agent in population)
+        {
             agent.CalculateFitness();
         }
     }
@@ -282,7 +292,7 @@ public class Population : MonoBehaviour
         {
             int index1 = Random.Range(0, matingPool.Count);
             int index2 = Random.Range(0, matingPool.Count);
-
+            Debug.Log("" + index1 + " " + index2);
             EliteDna parent1 = matingPool[index1];
             EliteDna parent2 = matingPool[index2];
 
@@ -301,9 +311,7 @@ public class Population : MonoBehaviour
         for (int i = 0; i < Controller.Settings.elitism; i++)
         {
             int index = Random.Range(0, numAgents);
-            population[index].Initialize(spawnPoint, targetPoint, learningPeriodAccumulatedElite[i].dna);
-            //population[index].Initialize(spawnPoint, targetPoint, elitePool[i]);
-            //population[index].gameObject.name = $"Best in {iteration}";
+            population[index].Initialize(spawnPoint, targetPoint, currentElite[i].dna);
             population[index].renderer.color = Color.green;
             population[index].renderer.sortingOrder = 1;
         }

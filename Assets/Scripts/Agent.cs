@@ -71,9 +71,29 @@ public class Agent : MonoBehaviour
         lastStep = 0;
     }
 
+    //public void CalculateFitnessOld()
+    //{
+    //    fitness = 100 * normalizedFinalDistance * normalizedBestDistance;
+
+    //    if (hitObstacle)
+    //        fitness *= .5f;
+    //    if (reachedTarget)
+    //        fitness *= 4f;
+    //}
+
     public void CalculateFitness()
     {
-        fitness = 100 * normalizedFinalDistance * normalizedBestDistance;
+        if (distanceToTarget < 1)
+        {
+            distanceToTarget = 1;
+        }
+
+        if (bestDistance < 1)
+        {
+            bestDistance = 1;
+        }
+
+        fitness = 1000 * 1 / distanceToTarget * 1 / bestDistance;
 
         if (hitObstacle)
             fitness *= .5f;
@@ -89,7 +109,7 @@ public class Agent : MonoBehaviour
     public void Tick()
     {
         if (hitObstacle || reachedTarget || outOfEnergy) return;
-        if (geneIndex == Controller.Instance.numMovements)
+        if (geneIndex == Controller.Instance.numMovements - 1)
         {
             distanceToTarget = CalculateDistance();
             outOfEnergy = true;
