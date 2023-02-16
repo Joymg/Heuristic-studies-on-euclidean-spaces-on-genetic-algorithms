@@ -46,7 +46,7 @@ bool _lineLine(float2 a1, float2 a2, float2 b1, float2 b2, out float2 collision)
 
     // if uA and uB are between 0-1, lines are colliding
     bool hit = uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
-    collision = hit ? float2(a1.x + (uA * (b1.x - a1.x)), a1.y + (uA * (b1.y - a1.y))) : float2(0, 0);
+    collision = hit ? float2(a1.x + (uA * (a2.x - a1.x)), a1.y + (uA * (a2.y - a1.y))) : float2(0, 0);
         
     return hit;
 }

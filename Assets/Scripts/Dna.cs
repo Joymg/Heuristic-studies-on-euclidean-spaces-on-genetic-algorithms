@@ -71,8 +71,8 @@ public class Dna
         Vector2 initialPosition = (Vector2)Controller.Instance.spawn.transform.position;
         for (int i = 0; i < Genes.Count; i++)
         {
-            Lines.Add(initialPosition);
             initialPosition = initialPosition + Genes[i];
+            Lines.Add(initialPosition);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public static class CPUTester
@@ -49,6 +50,7 @@ public static class CPUTester
         numObstacles = obstacles;
 
         agentsPathLines = new Line[population * movements];
+        mapObstacles.ToList().ForEach(obstacle => obstacle.CalculateVertex());
         obstaclesArray = new ObstacleGPU[obstacles];
 
         hasAgentCrashed = new int[population];
@@ -104,7 +106,7 @@ public static class CPUTester
         // if uA and uB are between 0-1, lines are colliding
         bool hit = uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
         if (hit)
-            collision = new Vector2(a1.x + (uA * (b1.x - a1.x)), a1.y + (uA * (b1.y - a1.y)));
+            collision = new Vector2(a1.x + (uA * (a2.x - a1.x)), a1.y + (uA * (a2.y - a1.y)));
         else
             collision = Vector2.zero;
         return hit;

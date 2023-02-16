@@ -109,23 +109,27 @@ public class Agent : MonoBehaviour
     public void Tick()
     {
         if (hitObstacle || reachedTarget || outOfEnergy) return;
-        if (geneIndex == Controller.Instance.numMovements - 1)
-        {
-            distanceToTarget = CalculateDistance();
-            outOfEnergy = true;
-            lastStep = geneIndex - 1;
-            return;
-        }
-
+       
         if ((Vector2)transform.position == nextStepPosition)
         {
+
             geneIndex++;
-            nextStepPosition = (Vector2)transform.position + dna.Genes[geneIndex];
-            float distanceToTarget = CalculateDistance();
-            if (distanceToTarget < bestDistance)
+
+            if (geneIndex == Controller.Instance.numMovements)
             {
-                bestDistance = distanceToTarget;
+                distanceToTarget = CalculateDistance();
+                outOfEnergy = true;
+                lastStep = geneIndex - 1;
+                return;
             }
+
+            nextStepPosition = (Vector2)transform.position + dna.Genes[geneIndex];
+            float currentDistanceToTarget = CalculateDistance();
+            if (currentDistanceToTarget < bestDistance)
+            {
+                bestDistance = currentDistanceToTarget;
+            }
+
         }
         else
         {

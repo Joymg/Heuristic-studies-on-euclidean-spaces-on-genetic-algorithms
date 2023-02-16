@@ -1,5 +1,6 @@
 
 
+using System.Linq;
 using UnityEngine;
 
 public static class GPUCalculator
@@ -86,6 +87,7 @@ public static class GPUCalculator
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/Physics");
 
         agentsPathLines = new LineGPU[population * movements];
+        mapObstacles.ToList().ForEach(obstacle => obstacle.CalculateVertex());
         obstaclesArray = new ObstacleGPU[obstacles];
 
         hasAgentCrashed = new int[population];
