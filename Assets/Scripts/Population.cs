@@ -160,44 +160,6 @@ public class Population : MonoBehaviour
         }
     }
 
-    private void CalculateNextElitesFitness()
-    {
-        learningPeriodAccumulatedElite = learningPeriodAccumulatedElite.OrderBy((x) => x.distanceToTarget).ToList();
-        minTargetDistance = learningPeriodAccumulatedElite[0].distanceToTarget;
-        maxTagetDistance = learningPeriodAccumulatedElite[learningPeriodAccumulatedElite.Count - 1].distanceToTarget;
-
-        learningPeriodAccumulatedElite = learningPeriodAccumulatedElite.OrderBy((x) => x.bestDistance).ToList();
-        minBestDistance = learningPeriodAccumulatedElite[0].bestDistance;
-        maxBestDistance = learningPeriodAccumulatedElite[learningPeriodAccumulatedElite.Count - 1].bestDistance;
-
-        foreach (EliteDna eliteDna in learningPeriodAccumulatedElite)
-        {
-            eliteDna.normalizedDistanceToTarget = MathAuxiliar.NormalizeValue(minTargetDistance, maxTagetDistance, eliteDna.distanceToTarget);
-            eliteDna.normalizedBestDistance = MathAuxiliar.NormalizeValue(minBestDistance, maxBestDistance, eliteDna.bestDistance);
-            eliteDna.CalculateFitness();
-        }
-
-        learningPeriodAccumulatedElite = learningPeriodAccumulatedElite.OrderBy((x) => x.fitness).ToList();
-    }
-
-
-    public void CalculateFitnessOld()
-    {
-        population = population.OrderBy((x) => x.DistanceToTarget).ToList();
-        minTargetDistance = population[0].DistanceToTarget;
-        maxTagetDistance = population[population.Count - 1].DistanceToTarget;
-
-        population = population.OrderBy((x) => x.BestDistance).ToList();
-        minBestDistance = population[0].BestDistance;
-        maxBestDistance = population[population.Count - 1].BestDistance;
-        foreach (Agent agent in population)
-        {
-            agent.NormalizedDistanceToTarget = MathAuxiliar.NormalizeValue(minTargetDistance, maxTagetDistance, agent.DistanceToTarget);
-            agent.NormalizedBestDistance = MathAuxiliar.NormalizeValue(minBestDistance, maxBestDistance, agent.BestDistance);
-            agent.CalculateFitness();
-        }
-    }
-
     public void CalculateFitness()
     {
         foreach (Agent agent in population)
@@ -228,28 +190,6 @@ public class Population : MonoBehaviour
         }
     }
 
-    //public void SelectionOld()
-    //{
-    //    matingPool.Clear();
-
-    //    float maxFitness = GetMaxFitness();
-
-    //    for (int i = 0; i < population.Count; i++)
-    //    {
-    //        float fitnessNormalized = Map(
-    //            population[i].Fitness,
-    //            0,
-    //            maxFitness,
-    //            0,
-    //            1);
-    //        int n = (int)fitnessNormalized * 100;
-    //        for (int j = 0; j < n; j++)
-    //        {
-    //            matingPool.Add(population[i]);
-    //        }
-    //    }
-    //}
-
     public void GetElites()
     {
         OrderPopulation();
@@ -266,33 +206,12 @@ public class Population : MonoBehaviour
         population = population.OrderByDescending(agent => agent.fitness).ToList();
     }
 
-    //public void ReproductionOld()
-    //{
-    //    for (int i = 0; i < population.Count; i++)
-    //    {
-    //        int index1 = Random.Range(0, matingPool.Count);
-    //        int index2 = Random.Range(0, matingPool.Count);
-
-    //        Agent parent1 = matingPool[index1];
-    //        Agent parent2 = matingPool[index2];
-
-    //        Dna child = parent1.Dna.Crossover(parent2.Dna);
-
-    //        child.Mutate();
-
-    //        population[i].Initialize(spawnPoint, targetPoint, child);
-    //        population[i].renderer.color = Color.red;
-    //        population[i].renderer.sortingOrder = 0;
-    //    }
-    //}
-
     public void Reproduction()
     {
         for (int i = 0; i < population.Count; i++)
         {
             int index1 = Random.Range(0, matingPool.Count);
             int index2 = Random.Range(0, matingPool.Count);
-            Debug.Log("" + index1 + " " + index2);
             EliteDna parent1 = matingPool[index1];
             EliteDna parent2 = matingPool[index2];
 
