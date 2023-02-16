@@ -19,8 +19,6 @@ public class Agent : MonoBehaviour
 
     private float bestDistance = float.MaxValue;
     private float distanceToTarget;
-    private float normalizedFinalDistance;
-    private float normalizedBestDistance;
     public bool ReachedTarget => reachedTarget;
     public bool HitObstacle => hitObstacle;
     public float DistanceToTarget => distanceToTarget;
@@ -36,18 +34,6 @@ public class Agent : MonoBehaviour
 
     public float Fitness => fitness;
     public Dna Dna => dna;
-
-    public float NormalizedDistanceToTarget
-    {
-        get { return normalizedFinalDistance; }
-        set { normalizedFinalDistance = value; }
-    }
-
-    public float NormalizedBestDistance
-    {
-        get { return normalizedBestDistance; }
-        set { normalizedBestDistance = value; }
-    }
 
     public void Initialize(Vector2 spawn, Vector2 target, Dna dna)
     {
@@ -70,17 +56,6 @@ public class Agent : MonoBehaviour
 
         lastStep = 0;
     }
-
-    //public void CalculateFitnessOld()
-    //{
-    //    fitness = 100 * normalizedFinalDistance * normalizedBestDistance;
-
-    //    if (hitObstacle)
-    //        fitness *= .5f;
-    //    if (reachedTarget)
-    //        fitness *= 4f;
-    //}
-
     public void CalculateFitness()
     {
         if (distanceToTarget < 1)
@@ -98,7 +73,10 @@ public class Agent : MonoBehaviour
         if (hitObstacle)
             fitness *= .5f;
         if (reachedTarget)
-            fitness *= 4f;
+        {
+            fitness *= 4;
+            fitness *= (((dna.Genes.Count - lastStep) / (float)dna.Genes.Count) + 1);
+        }
     }
 
     protected virtual float CalculateDistance()
