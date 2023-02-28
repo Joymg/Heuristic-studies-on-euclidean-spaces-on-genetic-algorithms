@@ -100,7 +100,9 @@ public static class GPUCalculator
             Dna currentAgentDna = Controller.Instance.population.AgentList[i].Dna;
             for (int j = 0; j < movements - 1; j++)
             {
-                agentsPathLines[i * movements + j] = new LineGPU(currentAgentDna.Lines[j], currentAgentDna.Lines[j + 1]);
+                agentsPathLines[i * movements + j] = new LineGPU(
+                    currentAgentDna.Lines[j],
+                    currentAgentDna.Lines[j + 1]);
             }
 
             hasAgentCrashed[i] = 0;

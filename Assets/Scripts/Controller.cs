@@ -32,7 +32,7 @@ public class Controller : MonoBehaviour
     public struct Settings
     {
         public static int iterations = 100;
-        public static int learningPeriod = 2;
+        public static int learningPeriod = 1;
         public static int populationSize = 50;
         public static int movements = 50;
         public static int elitism = 10;
@@ -156,21 +156,21 @@ public class Controller : MonoBehaviour
         }
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //    for (int i = 0; i < collisionsGPU.Length; i++)
-    //    {
-    //        Gizmos.color = Color.magenta;
-    //        Gizmos.DrawSphere(collisionsGPU[i], 0.2f);
+    private void OnDrawGizmos()
+    {
+        for (int i = 0; i < CPUTester.agentsPathLines.Length; i++)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(CPUTester.agentsPathLines[i].u, CPUTester.agentsPathLines[i].v);
+        }
+        for (int i = 0; i < collisionsGPU.Length; i++)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(collisionsCPU[i], 0.2f);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(collisionsGPU[i], 0.1f);
 
-    //        Gizmos.color = Color.yellow;
-    //        Gizmos.DrawSphere(collisionsCPU[i], 0.2f);
-    //    }
+        }
 
-    //    for (int i = 0; i < CPUTester.agentsPathLines.Length; i++)
-    //    {
-    //        Gizmos.color = Color.green;
-    //        Gizmos.DrawLine(CPUTester.agentsPathLines[i].u, CPUTester.agentsPathLines[i].v);
-    //    }
-    //}
+    }
 }

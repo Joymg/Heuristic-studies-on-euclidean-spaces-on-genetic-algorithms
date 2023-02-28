@@ -63,7 +63,9 @@ public static class CPUTester
             Dna currentAgentDna = Controller.Instance.population.AgentList[i].Dna;
             for (int j = 0; j < movements - 1; j++)
             {
-                agentsPathLines[i * movements + j] = new Line(currentAgentDna.Lines[j], currentAgentDna.Lines[j + 1]);
+                agentsPathLines[i * movements + j] = new Line(
+                    currentAgentDna.Lines[j],
+                    currentAgentDna.Lines[j + 1]);
             }
 
             hasAgentCrashed[i] = 0;
@@ -150,6 +152,33 @@ public static class CPUTester
         return false;
     }
 
+    // returns true if the line intersects the rect, and populates the collision point. 
+    // http://www.jeffreythompson.org/collision-detection/line-rect.php
+    public static bool LineRectCloser(Line l, ObstacleGPU o, out Vector2 collision)
+    {
+        Vector2[] collisions = new Vector2[4];
+        bool left = LineLine(l.u, l.v, o.a, o.b, out collisions[0]);
+        bool right = LineLine(l.u, l.v, o.b, o.c, out collisions[1]);
+        bool top = LineLine(l.u, l.v, o.c, o.d, out collisions[2]);
+        bool bottom = LineLine(l.u, l.v, o.d, o.a, out collisions[3]);
+
+        int index = 0;
+        float minDist = float.MaxValue;
+        for (int i = 0; i < 4; i++)
+        {
+            float dist = Vector2.Distance(l.u, collisions[i]);
+            if (minDist > dist)
+            {
+                minDist = dist;
+                index = i;
+
+            }
+        }
+        collision = collisions[index];
+
+        return left || right || top || bottom;
+    }
+
 
     public static void Calculate(Vector3Int id)
     {
@@ -161,7 +190,7 @@ public static class CPUTester
         if ((int)id.x < numAgents && (int)id.y < numMovements && (int)id.z < numObstacles * 4)
         {
             int currentAgentLineIndex = (int)id.x * numMovements + (int)id.y;
-            bool intersects = LineRect(
+            bool intersects = LineRectCloser(
             agentsPathLines[currentAgentLineIndex],
             obstaclesArray[id.z],
             out collisionPoints[id.x]);

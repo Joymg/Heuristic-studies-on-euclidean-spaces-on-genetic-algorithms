@@ -63,6 +63,8 @@ public class Dna
                 Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized;
             }
         }
+
+        GenerateGPUData();
     } 
     
     private void GenerateGPUData()

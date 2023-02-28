@@ -25,16 +25,12 @@ int num_obstacle;
 RWStructuredBuffer<Line> agentsPathLines;
 RWStructuredBuffer<float2> collisionPoints;
 
-
+RWStructuredBuffer<float2> lastAgentValidPosition;
 RWStructuredBuffer<Obstacle> obstacles;
 
 RWStructuredBuffer<int> hasAgentCrashed;
 RWStructuredBuffer<int> indexOfFirstCollision;
 
-RWStructuredBuffer<float2> lastAgentValidPosition;
-
-RWStructuredBuffer<float2> lineA;
-RWStructuredBuffer<float2> lineB;
 
 // returns true if the two lines intersect, and populates the collision point.
 // http://www.jeffreythompson.org/collision-detection/line-line.php
@@ -91,6 +87,33 @@ bool _lineRect(Line l, Obstacle o, out float2 collision)
     return false;
 }
 
+// returns true if the line intersects the rect, and populates the collision point. 
+// http://www.jeffreythompson.org/collision-detection/line-rect.php
+bool _lineRectCloser(Line l, Obstacle o, out float2 collision)
+{
+    float2 collisions[4];
+    bool left = _lineLine(l.u, l.v, o.a, o.b, collisions[0]);
+    bool right = _lineLine(l.u, l.v, o.b, o.c, collisions[1]);
+    bool top = _lineLine(l.u, l.v, o.c, o.d, collisions[2]);
+    bool bottom = _lineLine(l.u, l.v, o.d, o.a, collisions[3]);
+    
+    int index = 0;
+    float minDist = 1.0 / 0.0;
+    for (int i = 0; i < 4; i++)
+    {
+        float dist = distance(l.u, collisions[i]);
+        if (minDist > dist)
+        {
+            minDist = dist;
+            index = i;
+
+        }
+    }
+    collision = collisions[index];
+
+    return left || right || top || bottom;
+}
+
 [numthreads(8, 8, 1)]
 void LineCollides(uint3 id : SV_DispatchThreadID)
 {
@@ -99,7 +122,7 @@ void LineCollides(uint3 id : SV_DispatchThreadID)
     if ((int) id.x < num_agents && (int) id.y < num_movements && (int) id.z < num_obstacle * 4)
     {
         int currentAgentLineIndex = (int) id.x * num_movements + (int) id.y;
-        bool intersects = _lineRect(
+        bool intersects = _lineRectCloser(
         agentsPathLines[currentAgentLineIndex],
         obstacles[id.z],
         collisionPoints[id.x]);

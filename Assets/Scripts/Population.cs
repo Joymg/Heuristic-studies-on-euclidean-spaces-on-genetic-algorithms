@@ -215,7 +215,7 @@ public class Population : MonoBehaviour
 
             population[i].Initialize(spawnPoint, targetPoint, child);
             population[i].renderer.color = Color.red;
-            population[i].renderer.sortingOrder = 0;
+            population[i].renderer.sortingOrder = 2;
         }
     }
 
@@ -226,7 +226,7 @@ public class Population : MonoBehaviour
             int index = Random.Range(0, numAgents);
             population[index].Initialize(spawnPoint, targetPoint, currentElite[i].dna);
             population[index].renderer.color = Color.green;
-            population[index].renderer.sortingOrder = 1;
+            population[index].renderer.sortingOrder = 3;
         }
     }
 
