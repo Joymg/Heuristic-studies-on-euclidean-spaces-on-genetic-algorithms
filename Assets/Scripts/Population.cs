@@ -28,22 +28,17 @@ public class Population : MonoBehaviour
     //private List<Agent> matingPool;
     private List<EliteDna> matingPool;
 
-    public TypeOfDistance typeOfDistance;
-    public List<EliteDna> currentElite;
-    public List<EliteDna> learningPeriodAccumulatedElite;
-    private List<Dna> elitePool;
+    private TypeOfDistance typeOfDistance;
+    private List<EliteDna> currentElite;
+    private List<EliteDna> learningPeriodAccumulatedElite;
 
     public GameObject agentEuclideanPrefab;
     public GameObject agentManhattanPrefab;
     public GameObject agentChebyshevPrefab;
 
-    private float maxTagetDistance;
-    private float minTargetDistance;
-    private float maxBestDistance;
-    private float minBestDistance;
-
     public Action AgentArrivedToTarget;
 
+    public TypeOfDistance TypeOfDistance => typeOfDistance;
     public int NumMovements => numMovements;
 
     private float TotalFitness => population.Sum(agent => agent.Fitness);
@@ -62,7 +57,6 @@ public class Population : MonoBehaviour
     {
         population = new List<Agent>();
         matingPool = new List<EliteDna>();
-        elitePool = new List<Dna>();
         learningPeriodAccumulatedElite = new List<EliteDna>();
         currentElite = new List<EliteDna>();
 
@@ -121,14 +115,14 @@ public class Population : MonoBehaviour
         }
     }
 
-    public bool TargetReached()
+    public bool GenerationCompleted()
     {
         return population.Any(agent => agent.ReachedTarget);
     }
 
     public void NextGeneration()
     {
-        CalculateFitness();
+        CalculatePopulationFitness();
         Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MaxFitness));
         GetElites();
 
@@ -160,7 +154,7 @@ public class Population : MonoBehaviour
         }
     }
 
-    public void CalculateFitness()
+    public void CalculatePopulationFitness()
     {
         foreach (Agent agent in population)
         {

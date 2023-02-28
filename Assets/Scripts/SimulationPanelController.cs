@@ -25,7 +25,7 @@ public class SimulationPanelController : MonoBehaviour
     private void Start()
     {
         population = FindObjectOfType<Population>();
-        switch (population.typeOfDistance)
+        switch (population.TypeOfDistance)
         {
             case TypeOfDistance.Euclidean:
                 typeOfDistanceText.text = "Euclidean";

@@ -19,7 +19,7 @@ public class MenuUI : MonoBehaviour
     {
         // initialize input fields with default values
         iterations.text = Controller.Settings.iterations.ToString();
-        //learningPeriod.text = Controller.Settings.learningPeriod.ToString();
+        learningPeriod.text = Controller.Settings.learningPeriod.ToString();
         populationSize.text = Controller.Settings.populationSize.ToString();
         mutationProb.text = Controller.Settings.mutationProb.ToString();
         movements.text = Controller.Settings.movements.ToString();

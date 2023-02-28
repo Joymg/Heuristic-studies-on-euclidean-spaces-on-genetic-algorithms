@@ -60,7 +60,7 @@ public class Dna
         {
             if (Random.Range(0, 1f) < Controller.Instance.mutationChance)
             {
-                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized ;
+                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized;
             }
         }
     } 
@@ -87,13 +87,5 @@ public class EliteDna
     }
 
     public Dna dna;
-    public float bestDistance;
-    public float distanceToTarget;
-    public bool hitObstacle;
-    public bool arrivedToTarget;
-
-    public float normalizedBestDistance;
-    public float normalizedDistanceToTarget;
-
     public float fitness;
 }

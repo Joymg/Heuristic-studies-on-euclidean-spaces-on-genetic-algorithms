@@ -5,16 +5,16 @@ using UnityEngine;
 
 public static class CPUTester
 {
-    public struct ObstacleGPU
+    public struct ObstacleData
     {
         public Vector2 a;
         public Vector2 b;
         public Vector2 c;
         public Vector2 d;
 
-        public static explicit operator ObstacleGPU(Obstacle obstacle)
+        public static explicit operator ObstacleData(Obstacle obstacle)
         {
-            return new ObstacleGPU()
+            return new ObstacleData()
             {
                 a = obstacle.vertex[0],
                 b = obstacle.vertex[1],
@@ -34,7 +34,7 @@ public static class CPUTester
     public static Line[] agentsPathLines;
     public static Vector2[] collisionPoints;
 
-    public static ObstacleGPU[] obstaclesArray;
+    public static ObstacleData[] obstaclesArray;
 
     public static int[] hasAgentCrashed;
     public static int[] indexOfFirstCollision;
@@ -51,7 +51,7 @@ public static class CPUTester
 
         agentsPathLines = new Line[population * movements];
         mapObstacles.ToList().ForEach(obstacle => obstacle.CalculateVertex());
-        obstaclesArray = new ObstacleGPU[obstacles];
+        obstaclesArray = new ObstacleData[obstacles];
 
         hasAgentCrashed = new int[population];
         collisionPoints = new Vector2[population];
@@ -74,7 +74,7 @@ public static class CPUTester
 
         for (int i = 0; i < obstacles; i++)
         {
-            obstaclesArray[i] = (ObstacleGPU)mapObstacles[i];
+            obstaclesArray[i] = (ObstacleData)mapObstacles[i];
         }
 
 
@@ -132,7 +132,7 @@ public static class CPUTester
 
     // returns true if the line intersects the rect, and populates the collision point. 
     // http://www.jeffreythompson.org/collision-detection/line-rect.php
-    public static bool LineRect(Line l, ObstacleGPU o, out Vector2 collision)
+    public static bool LineRect(Line l, ObstacleData o, out Vector2 collision)
     {
         bool left = LineLine(l.u, l.v, o.a, o.b, out collision);
         if (left)
