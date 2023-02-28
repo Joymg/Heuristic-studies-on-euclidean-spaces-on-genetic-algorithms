@@ -105,13 +105,16 @@ public class Population : MonoBehaviour
 
     public void Tick()
     {
-        for (int i = 0; i < population.Count; i++)
+        if (Controller.Instance.simulationType == SimulationType.UnityPhysics)
         {
-            if (population[i].CheckTargetReached())
+            for (int i = 0; i < population.Count; i++)
             {
-                AgentArrivedToTarget?.Invoke();
+                if (population[i].CheckTargetReached())
+                {
+                    AgentArrivedToTarget?.Invoke();
+                }
+                population[i].Tick();
             }
-            population[i].Tick();
         }
     }
 

@@ -88,6 +88,11 @@ public class EliteDna
         fitness = agent.fitness;
     }
 
+    public EliteDna(Dna dna)
+    {
+        this.dna = dna;
+    }
+
     public Dna dna;
     public float fitness;
 }

@@ -15,6 +15,14 @@ public enum Map
     StraightObstacles2,
 }
 
+public enum SimulationType
+{
+    UnityPhysics,
+    CPUMath,
+    GPUMath,
+}
+
+
 [System.Serializable]
 public struct MapSelection
 {
@@ -40,6 +48,7 @@ public class Controller : MonoBehaviour
         public static float speed = 1f;
         public static TypeOfDistance typeOfDistance = 0;
         public static Map map = 0;
+        public static SimulationType simualtionType = SimulationType.UnityPhysics;
     }
 
     public int numAgents;
@@ -55,6 +64,10 @@ public class Controller : MonoBehaviour
     [Space]
     public bool useGPU = true;
     public bool useCPU = true;
+    public SimulationType simulationType;
+
+    public CPUTester cpuTester;
+    //public GPUCalculator gpuCalculator;
 
 
     public Population population;
@@ -91,7 +104,18 @@ public class Controller : MonoBehaviour
         spawn = mapSelected.spawn;
         target = mapSelected.target;
 
-        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+        switch (simulationType)
+        {
+            case SimulationType.UnityPhysics:
+                population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+                break;
+            case SimulationType.CPUMath:
+                cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray());
+                break;
+            case SimulationType.GPUMath:
+                //gpuCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+                break;
+        }
 
 
         Database.CreateDB();
@@ -102,57 +126,61 @@ public class Controller : MonoBehaviour
     private IEnumerator Wait()
     {
         yield return new WaitForSecondsRealtime(2f);
-        CPUTester.isCalculating = false;
-        GPUCalculator.isCalculating = false;
+        //CPUTester.isCalculating = false;
+        //GPUCalculator.isCalculating = false;
     }
 
     private void FixedUpdate()
     {
-        if (useGPU)
+        //if (useGPU)
+        //{
+        //    if (!GPUCalculator.isCalculating)
+        //    {
+        //        GPUCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+        //        //StartCoroutine(Wait());
+        //    }
+        //}
+
+        //if (useCPU)
+        //{
+        //    if (!CPUTester.isCalculating)
+        //    {
+        //        CPUTester.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+
+        //        //StartCoroutine(Wait());
+        //    }
+        //}
+
+        if (simulationType == SimulationType.UnityPhysics)
         {
-            if (!GPUCalculator.isCalculating)
+
+            if (population.IsRunning)
             {
-                GPUCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
-                //StartCoroutine(Wait());
+                population.Tick();
             }
-        }
-
-        if (useCPU)
-        {
-            if (!CPUTester.isCalculating)
+            else
             {
-                CPUTester.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
-
-               //StartCoroutine(Wait());
-            }
-        }
-
-        if (population.IsRunning)
-        {
-            population.Tick();
-        }
-        else
-        {
-            if (numIterations >= Settings.iterations)
-            {
-                Time.timeScale = 1;
-                while (time < stopDuration)
+                if (numIterations >= Settings.iterations)
                 {
-                    time += Time.unscaledDeltaTime;
+                    Time.timeScale = 1;
+                    while (time < stopDuration)
+                    {
+                        time += Time.unscaledDeltaTime;
+                        return;
+                    }
+                    time = 0;
+                    population.RepresentBest();
                     return;
                 }
-                time = 0;
-                population.RepresentBest();
-                return;
+
+                population.NextGeneration();
+
+                IncrementIteration?.Invoke();
+                numIterations++;
+
+                //CPUTester.isCalculating = false;
+                //GPUCalculator.isCalculating = false;
             }
-
-            population.NextGeneration();
-
-            IncrementIteration?.Invoke();
-            numIterations++;
-
-            CPUTester.isCalculating = false;
-            GPUCalculator.isCalculating = false;
         }
     }
 

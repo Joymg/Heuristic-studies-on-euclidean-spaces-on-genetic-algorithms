@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public static class CPUTester
+public class CPUTester
 {
     public struct ObstacleData
     {
@@ -25,29 +25,36 @@ public static class CPUTester
 
     }
 
-    public static bool isCalculating;
+    public bool isCalculating;
 
-    public static int numAgents;
-    public static int numMovements;
-    public static int numObstacles;
+    public int numAgents;
+    public int numMovements;
+    public int numObstacles;
+    private TypeOfDistance typeOfDistance;
+    private Vector2 target;
 
-    public static Line[] agentsPathLines;
-    public static Vector2[] collisionPoints;
+    public Line[] agentsPathLines;
+    public Vector2[] collisionPoints;
 
-    public static ObstacleData[] obstaclesArray;
+    public ObstacleData[] obstaclesArray;
 
-    public static int[] hasAgentCrashed;
-    public static int[] indexOfFirstCollision;
+    public int[] hasAgentCrashed;
+    public int[] indexOfFirstCollision;
 
-    public static Vector2[] lastAgentValidPosition;
+    public Vector2[] lastAgentValidPosition;
 
+    public EliteDna[] populationDna;
 
-    public static void Initialize(int population, int movements, int obstacles, Obstacle[] mapObstacles)
+    public void Initialize(int population, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target)
     {
         isCalculating = true;
         numAgents = population;
         numMovements = movements;
         numObstacles = obstacles;
+        this.typeOfDistance = typeOfDistance;
+        this.target = target;
+
+        populationDna = new EliteDna[population];
 
         agentsPathLines = new Line[population * movements];
         mapObstacles.ToList().ForEach(obstacle => obstacle.CalculateVertex());
@@ -60,7 +67,8 @@ public static class CPUTester
 
         for (int i = 0; i < population; i++)
         {
-            Dna currentAgentDna = Controller.Instance.population.AgentList[i].Dna;
+            Dna currentAgentDna = new Dna();
+            populationDna[i] = new EliteDna(currentAgentDna);
             for (int j = 0; j < movements - 1; j++)
             {
                 agentsPathLines[i * movements + j] = new Line(
@@ -79,26 +87,14 @@ public static class CPUTester
             obstaclesArray[i] = (ObstacleData)mapObstacles[i];
         }
 
-
-        for (int i = 0; i < numAgents; i++)
+        for (int i = 0; i < iterations; i++)
         {
-            for (int j = 0; j < numMovements; j++)
-            {
-                for (int k = 0; k < numObstacles; k++)
-                {
-                    Calculate(new Vector3Int(i, j, k));
-                }
-            }
+            CPUIteration();
         }
-
-
-        //Debug.Log("ready");
-
-        Controller.Instance.collisionsCPU = lastAgentValidPosition;
-        //isCalculating = false;
     }
 
-    private static bool LineLine(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, out Vector2 collision)
+
+    private bool LineLine(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, out Vector2 collision)
     {
 
         // calculate the distance to intersection point
@@ -114,7 +110,7 @@ public static class CPUTester
         return hit;
     }
 
-    public static bool LineRect(Vector2 u, Vector2 v, Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 collision)
+    public bool LineRect(Vector2 u, Vector2 v, Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 collision)
     {
         bool left = LineLine(u, v, a, b, out collision);
         if (left)
@@ -134,7 +130,7 @@ public static class CPUTester
 
     // returns true if the line intersects the rect, and populates the collision point. 
     // http://www.jeffreythompson.org/collision-detection/line-rect.php
-    public static bool LineRect(Line l, ObstacleData o, out Vector2 collision)
+    public bool LineRect(Line l, ObstacleData o, out Vector2 collision)
     {
         bool left = LineLine(l.u, l.v, o.a, o.b, out collision);
         if (left)
@@ -180,7 +176,7 @@ public static class CPUTester
     }
 
 
-    public static void Calculate(Vector3Int id)
+    public void Calculate(Vector3Int id)
     {
         /*if (LineRect(LineA, LineB, obstacle.a, obstacle.b, obstacle.c, obstacle.d))
         {
@@ -206,6 +202,70 @@ public static class CPUTester
 
             lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
 
+        }
+
+    }
+    void CPUIteration()
+    {
+        for (int i = 0; i < numAgents; i++)
+        {
+            for (int j = 0; j < numMovements; j++)
+            {
+                for (int k = 0; k < numObstacles; k++)
+                {
+                    Calculate(new Vector3Int(i, j, k));
+                }
+            }
+        }
+        //calculateFitness
+        CalculatePopulationFitness();
+        //add iteration data base
+        //learning period
+        //selection
+        //reproduction
+        //setelites
+
+        Controller.Instance.collisionsCPU = lastAgentValidPosition;
+    }
+
+    private void CalculatePopulationFitness()
+    {
+        float fitness = 0;
+        for (int i = 0; i < numAgents; i++)
+        {
+            float distanceToTarget = CalculateDistance(lastAgentValidPosition[i]);
+            if (distanceToTarget < 1)
+            {
+                distanceToTarget = 1;
+            }
+
+            if (bestDistance < 1)
+            {
+                bestDistance = 1;
+            }
+
+            fitness = 1000 * 1 / distanceToTarget * 1 / bestDistance;
+
+            if (hitObstacle)
+                fitness *= .5f;
+            if (reachedTarget)
+            {
+                fitness *= 4;
+                fitness *= (((dna.Genes.Count - lastStep) / (float)dna.Genes.Count) + 1);
+            }
+        }
+    }
+    private float CalculateDistance(Vector2 finalPoint)
+    {
+        switch (Controller.Settings.typeOfDistance)
+        {
+            case TypeOfDistance.Manhattan:
+                return Mathf.Abs(finalPoint.x - target.x) + Mathf.Abs(finalPoint.y - target.y);
+            case TypeOfDistance.Chebyshev:
+                return Mathf.Max(finalPoint.x - target.x, finalPoint.y - target.y);
+            case TypeOfDistance.Euclidean:
+            default:
+                return Mathf.Sqrt(Mathf.Pow(finalPoint.x - target.x, 2) + Mathf.Pow(finalPoint.y - target.y, 2));
         }
     }
 }
