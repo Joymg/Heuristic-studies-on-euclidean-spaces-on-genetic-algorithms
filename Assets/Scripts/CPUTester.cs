@@ -154,7 +154,7 @@ public static class CPUTester
 
     // returns true if the line intersects the rect, and populates the collision point. 
     // http://www.jeffreythompson.org/collision-detection/line-rect.php
-    public static bool LineRectCloser(Line l, ObstacleGPU o, out Vector2 collision)
+    public static bool LineRectCloser(Line l, ObstacleData o, out Vector2 collision)
     {
         Vector2[] collisions = new Vector2[4];
         bool left = LineLine(l.u, l.v, o.a, o.b, out collisions[0]);
