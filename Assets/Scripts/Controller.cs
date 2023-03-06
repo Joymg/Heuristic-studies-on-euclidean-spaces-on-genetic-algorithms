@@ -110,7 +110,7 @@ public class Controller : MonoBehaviour
                 population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
                 break;
             case SimulationType.CPUMath:
-                cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray());
+                cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position);
                 break;
             case SimulationType.GPUMath:
                 //gpuCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
@@ -186,10 +186,10 @@ public class Controller : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        for (int i = 0; i < CPUTester.agentsPathLines.Length; i++)
+        for (int i = 0; i < cpuTester.agentsPathLines.Length; i++)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawLine(CPUTester.agentsPathLines[i].u, CPUTester.agentsPathLines[i].v);
+            Gizmos.DrawLine(cpuTester.agentsPathLines[i].u, cpuTester.agentsPathLines[i].v);
         }
         for (int i = 0; i < collisionsGPU.Length; i++)
         {

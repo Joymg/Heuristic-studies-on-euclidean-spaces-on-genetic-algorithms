@@ -43,6 +43,9 @@ public class CPUTester
 
     public Vector2[] lastAgentValidPosition;
 
+    public Vector2[] bestPosition;
+    public float[] bestPositionDistance;
+
     public EliteDna[] populationDna;
 
     public void Initialize(int population, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target)
@@ -64,6 +67,8 @@ public class CPUTester
         collisionPoints = new Vector2[population];
         indexOfFirstCollision = new int[population];
         lastAgentValidPosition = new Vector2[population];
+        bestPosition = new Vector2[population];
+        bestPositionDistance = new float[population];
 
         for (int i = 0; i < population; i++)
         {
@@ -79,7 +84,8 @@ public class CPUTester
             hasAgentCrashed[i] = 0;
             collisionPoints[i] = Vector2.zero;
             indexOfFirstCollision[i] = movements - 1;
-            lastAgentValidPosition[i] = currentAgentDna.Lines[movements - 1];
+            bestPosition[i] = currentAgentDna.Lines[movements - 1];
+            bestPositionDistance[i] = float.MaxValue;
         }
 
         for (int i = 0; i < obstacles; i++)
@@ -150,7 +156,7 @@ public class CPUTester
 
     // returns true if the line intersects the rect, and populates the collision point. 
     // http://www.jeffreythompson.org/collision-detection/line-rect.php
-    public static bool LineRectCloser(Line l, ObstacleData o, out Vector2 collision)
+    public bool LineRectCloser(Line l, ObstacleData o, out Vector2 collision)
     {
         Vector2[] collisions = new Vector2[4];
         bool left = LineLine(l.u, l.v, o.a, o.b, out collisions[0]);
@@ -194,15 +200,22 @@ public class CPUTester
 
             bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || intersects) ? true : false;
 
-            hasAgentCrashed[id.x] = hasIntersected ? 1 : 0;
-
             bool improves = (int)id.y < indexOfFirstCollision[id.x];
+
+            float distanceToTargetThisMovement = intersects ? CalculateDistance(collisionPoints[id.x]) : CalculateDistance(agentsPathLines[currentAgentLineIndex].v);
+
+            bool improvesBestDistance = bestPositionDistance[id.x] < distanceToTargetThisMovement;
+
+            bestPositionDistance[id.x] = (hasAgentCrashed[id.x] != 1 && improvesBestDistance) ? distanceToTargetThisMovement : bestPositionDistance[id.x];
+
+            hasAgentCrashed[id.x] = hasIntersected ? 1 : 0;
 
             indexOfFirstCollision[id.x] = intersects && improves ? id.y : indexOfFirstCollision[id.x];
 
             lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
 
         }
+
 
     }
     void CPUIteration()
@@ -239,6 +252,7 @@ public class CPUTester
                 distanceToTarget = 1;
             }
 
+            float bestDistance = CalculateDistance(lastAgentValidPosition[i]);
             if (bestDistance < 1)
             {
                 bestDistance = 1;
@@ -246,7 +260,7 @@ public class CPUTester
 
             fitness = 1000 * 1 / distanceToTarget * 1 / bestDistance;
 
-            if (hitObstacle)
+            if (hasAgentCrashed[i] == 1)
                 fitness *= .5f;
             if (reachedTarget)
             {
