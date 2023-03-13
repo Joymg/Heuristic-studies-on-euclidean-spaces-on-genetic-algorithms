@@ -42,11 +42,18 @@ public class CPUTester
     public int[] indexOfFirstCollision;
 
     public Vector2[] lastAgentValidPosition;
+    public int[] indexOfLastAgentValidMovement;
+
+    public int[] hasAgentReachedTarget;
 
     public Vector2[] bestPosition;
     public float[] bestPositionDistance;
 
     public EliteDna[] populationDna;
+    private List<EliteDna> currentElite;
+    private List<EliteDna> learningPeriodAccumulatedElite;
+
+    private List<EliteDna> matingPool;
 
     public void Initialize(int population, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target)
     {
@@ -58,15 +65,21 @@ public class CPUTester
         this.target = target;
 
         populationDna = new EliteDna[population];
+        currentElite = new List<EliteDna>();
+        learningPeriodAccumulatedElite = new List<EliteDna>();
+        matingPool = new List<EliteDna>();
+
 
         agentsPathLines = new Line[population * movements];
         mapObstacles.ToList().ForEach(obstacle => obstacle.CalculateVertex());
         obstaclesArray = new ObstacleData[obstacles];
 
         hasAgentCrashed = new int[population];
+        hasAgentReachedTarget = new int[population];
         collisionPoints = new Vector2[population];
         indexOfFirstCollision = new int[population];
         lastAgentValidPosition = new Vector2[population];
+        indexOfLastAgentValidMovement = new int[population];
         bestPosition = new Vector2[population];
         bestPositionDistance = new float[population];
 
@@ -82,8 +95,10 @@ public class CPUTester
             }
 
             hasAgentCrashed[i] = 0;
+            hasAgentReachedTarget[i] = 0;
             collisionPoints[i] = Vector2.zero;
             indexOfFirstCollision[i] = movements - 1;
+            indexOfLastAgentValidMovement[i] = movements - 1;
             bestPosition[i] = currentAgentDna.Lines[movements - 1];
             bestPositionDistance[i] = float.MaxValue;
         }
@@ -196,7 +211,6 @@ public class CPUTester
             agentsPathLines[currentAgentLineIndex],
             obstaclesArray[id.z],
             out collisionPoints[id.x]);
-            //bool intersects = _lineRect(lineA[id.x], lineB[id.x], obstacle[id.x].a, obstacle[id.x].b, obstacle[id.x].c, obstacle[id.x].d, collision);
 
             bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || intersects) ? true : false;
 
@@ -206,17 +220,19 @@ public class CPUTester
 
             bool improvesBestDistance = bestPositionDistance[id.x] < distanceToTargetThisMovement;
 
+            hasAgentReachedTarget[id.x] = distanceToTargetThisMovement <= 0.5f ? 1 : 0;
+
             bestPositionDistance[id.x] = (hasAgentCrashed[id.x] != 1 && improvesBestDistance) ? distanceToTargetThisMovement : bestPositionDistance[id.x];
 
             hasAgentCrashed[id.x] = hasIntersected ? 1 : 0;
 
             indexOfFirstCollision[id.x] = intersects && improves ? id.y : indexOfFirstCollision[id.x];
 
+            indexOfLastAgentValidMovement[id.x] = intersects && improves ? id.y : indexOfLastAgentValidMovement[id.x];
+            indexOfLastAgentValidMovement[id.x] = hasAgentCrashed[id.x] == 0 && hasAgentReachedTarget[id.x] == 1 ? id.y : indexOfLastAgentValidMovement[id.x];
+
             lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
-
         }
-
-
     }
     void CPUIteration()
     {
@@ -230,13 +246,45 @@ public class CPUTester
                 }
             }
         }
-        //calculateFitness
         CalculatePopulationFitness();
         //add iteration data base
-        //learning period
-        //selection
-        //reproduction
-        //setelites
+        GetElites();
+        if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
+        {
+            currentElite.Clear();
+
+            currentElite.AddRange(learningPeriodAccumulatedElite.GetRange(0, Controller.Settings.elitism));
+            learningPeriodAccumulatedElite.Clear();
+        }
+        if (currentElite.Count == 0) //First learning period, initialize agents with random paths
+        {
+            for (int i = 0; i < numAgents; i++)
+            {
+                Dna currentAgentDna = new Dna();
+                populationDna[i] = new EliteDna(currentAgentDna);
+                for (int j = 0; j < numMovements - 1; j++)
+                {
+                    agentsPathLines[i * numMovements + j] = new Line(
+                        currentAgentDna.Lines[j],
+                        currentAgentDna.Lines[j + 1]);
+                }
+
+                hasAgentCrashed[i] = 0;
+                hasAgentReachedTarget[i] = 0;
+                collisionPoints[i] = Vector2.zero;
+                indexOfFirstCollision[i] = numMovements - 1;
+                indexOfLastAgentValidMovement[i] = numMovements - 1;
+                bestPosition[i] = currentAgentDna.Lines[numMovements - 1];
+                bestPositionDistance[i] = float.MaxValue;
+            }
+        }
+        else
+        {
+            Selection();
+            Reproduction();
+            SetElites();
+        }
+        
 
         Controller.Instance.collisionsCPU = lastAgentValidPosition;
     }
@@ -262,11 +310,12 @@ public class CPUTester
 
             if (hasAgentCrashed[i] == 1)
                 fitness *= .5f;
-            if (reachedTarget)
+            if (hasAgentReachedTarget[i] == 1)
             {
                 fitness *= 4;
-                fitness *= (((dna.Genes.Count - lastStep) / (float)dna.Genes.Count) + 1);
+                fitness *= (((numMovements - indexOfLastAgentValidMovement[i]) / (float)numMovements) + 1);
             }
+            populationDna[i].fitness = fitness;
         }
     }
     private float CalculateDistance(Vector2 finalPoint)
@@ -280,6 +329,88 @@ public class CPUTester
             case TypeOfDistance.Euclidean:
             default:
                 return Mathf.Sqrt(Mathf.Pow(finalPoint.x - target.x, 2) + Mathf.Pow(finalPoint.y - target.y, 2));
+        }
+    }
+
+    public void GetElites()
+    {
+        populationDna = populationDna.OrderByDescending(agent => agent.fitness).ToArray();
+        for (int i = 0; i < Controller.Settings.elitism; i++)
+        {
+            learningPeriodAccumulatedElite.Add(new EliteDna(populationDna[i]));
+        }
+    }
+
+    public void Selection()
+    {
+        matingPool.Clear();
+
+        float maxFitness = currentElite.Max(agent => agent.fitness);
+
+        for (int i = 0; i < currentElite.Count; i++)
+        {
+            float fitnessNormalized = Map(
+                currentElite[i].fitness,
+                0,
+                maxFitness,
+                0,
+                1);
+            int n = (int)fitnessNormalized * 100;
+            for (int j = 0; j < n; j++)
+            {
+                matingPool.Add(currentElite[i]);
+            }
+        }
+    }
+
+    private float Map(float n, float start1, float stop1, float start2, float stop2)
+    {
+        return ((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2;
+    }
+
+    public void Reproduction()
+    {
+        for (int i = 0; i < populationDna.Length; i++)
+        {
+            int index1 = Random.Range(0, matingPool.Count);
+            int index2 = Random.Range(0, matingPool.Count);
+            EliteDna parent1 = matingPool[index1];
+            EliteDna parent2 = matingPool[index2];
+
+            Dna child = parent1.dna.Crossover(parent2.dna);
+
+            child.Mutate();
+
+            populationDna[i] = new EliteDna(child);
+            for (int j = 0; j < numMovements - 1; j++)
+            {
+                agentsPathLines[i * numMovements + j] = new Line(
+                    child.Lines[j],
+                    child.Lines[j + 1]);
+            }
+            hasAgentCrashed[i] = 0;
+            hasAgentReachedTarget[i] = 0;
+            collisionPoints[i] = Vector2.zero;
+            indexOfFirstCollision[i] = numMovements - 1;
+            indexOfLastAgentValidMovement[i] = numMovements - 1;
+            bestPosition[i] = child.Lines[numMovements - 1];
+            bestPositionDistance[i] = float.MaxValue;
+        }
+    }
+
+    public void SetElites()
+    {
+        for (int i = 0; i < Controller.Settings.elitism; i++)
+        {
+            int index = Random.Range(0, numAgents);
+            populationDna[index] = new EliteDna(currentElite[i].dna);
+            for (int j = 0; j < numMovements - 1; j++)
+            {
+                agentsPathLines[index * numMovements + j] = new Line(
+                    currentElite[i].dna.Lines[j],
+                    currentElite[i].dna.Lines[j + 1]);
+            }
+            bestPosition[index] = currentElite[i].dna.Lines[numMovements - 1];
         }
     }
 }
