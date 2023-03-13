@@ -47,13 +47,47 @@ public class Population : MonoBehaviour
     public int CrashedAgents => population.Count(agent => agent.HitObstacle);
     public float RatioOfSuccess => (float)SuccessfulAgents / numAgents;
     public float AverageFitness => population.Sum(agent => agent.fitness) / numAgents;
+    public float MedianFitness
+    {
+        get
+        {
+            population.OrderBy(x => x.fitness);
+            return numAgents % 2 == 0 ? (population[numAgents / 2].fitness + population[(int)(numAgents / 2) - 1].fitness) / 2 : population[numAgents / 2].fitness;
+        }
+    }
+
+    public float StandardDeviationFitness
+    {
+        get
+        {
+            population.OrderBy(x => x.fitness);
+            float sum = 0;
+            for (int i = 0; i < numAgents; i++)
+            {
+                sum += population[i].fitness * population[i].fitness;
+            }
+            var avg = AverageFitness;
+            return Mathf.Sqrt((sum / numAgents) - (avg * avg));
+        }
+    }
+
+    public float VarianceFitness
+    {
+        get
+        {
+            var standardDeviation = StandardDeviationFitness;
+            return standardDeviation * standardDeviation;
+        }
+    }
+
     public float MaxFitness => population.Max(agent => agent.fitness);
+    public float MinFitness => population.Min(agent => agent.fitness);
 
     public bool IsRunning => population.Any(agent => !agent.Finished);
 
-    public List<Agent> AgentList => population; 
+    public List<Agent> AgentList => population;
 
-    public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance ,Transform spawn, Transform target)
+    public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance, Transform spawn, Transform target)
     {
         population = new List<Agent>();
         matingPool = new List<EliteDna>();
@@ -126,7 +160,7 @@ public class Population : MonoBehaviour
     public void NextGeneration()
     {
         CalculatePopulationFitness();
-        Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MaxFitness));
+        Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
         GetElites();
 
         //Time to learn so we take the numElites best from the nextElites list (calculate fitness first), save them in currentElite,

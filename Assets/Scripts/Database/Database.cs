@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using Mono.Data.Sqlite;
@@ -12,18 +13,19 @@ public static class Database
     {
         private readonly TypeOfDistance _distanceType;
         private readonly int _startingNumAgents;
+        private readonly int _startingNumMovements;
         private readonly int _elitism;
         private readonly float _mutationChance;
-        private readonly int _iterationID;
+        private readonly Map _mapID;
 
-        public Database_SimulationEntry(TypeOfDistance distanceType, int startingNumAgents, int elitism,
-            float mutationChance, float parentMutationWeight, bool usesPoisson, int iterationID)
+        public Database_SimulationEntry(TypeOfDistance distanceType, int startingNumAgents, int startingNumMovements, int elitism, float mutationChance, Map mapID)
         {
-            this._distanceType = distanceType;
-            this._startingNumAgents = startingNumAgents;
-            this._elitism = elitism;
-            this._mutationChance = mutationChance;
-            this._iterationID = iterationID;
+            _distanceType = distanceType;
+            _startingNumAgents = startingNumAgents;
+            _startingNumMovements = startingNumMovements;
+            _elitism = elitism;
+            _mutationChance = mutationChance;
+            _mapID = mapID;
         }
 
         public override string ToString()
@@ -44,38 +46,70 @@ public static class Database
                     break;
             }
 
+            string mapName = "";
+            switch (_mapID)
+            {
+                case Map.DiagonalObstacles:
+                    mapName = "DiagonalObstacles";
+                    break;
+                case Map.DiagonalObstacles1:
+                    mapName = "DiagonalObstacles1";
+                    break;
+                case Map.DiagonalObstacles2:
+                    mapName = "DiagonalObstacles2";
+                    break;
+                case Map.StraightObstacles:
+                    mapName = "StraightObstacles";
+                    break;
+                case Map.StraightObstacles1:
+                    mapName = "StraightObstacles1";
+                    break;
+                case Map.StraightObstacles2:
+                    mapName = "StraightObstacles2";
+                    break;
+            }
+
             return
-                $"INSERT INTO simulations (distanceType, startingNumAgents, elitism, mutationChance, firstSuccessfulIteration)VALUES ('{typeName}', '{_startingNumAgents}', '{_elitism}', '{_mutationChance}', '{_iterationID}');";
+                $"INSERT INTO simulations (distanceType, startingNumAgents, startingNumMovements, elitism, mutationChance, mapID)VALUES ('{typeName}', '{_startingNumAgents}', '{_startingNumMovements}', '{_elitism}', '{_mutationChance}', '{mapName}');";
         }
     }
 
     public struct Database_IterationEntry
     {
-        private readonly int _currentIteration;
+        private readonly int _simulationID;
         private readonly float _successRatio;
         private readonly int _numSuccessfulAgents;
         private readonly int _numCrashedAgents;
         private readonly int _milliseconds;
         private readonly float _averageFitness;
+        private readonly float _medianFitness;
         private readonly float _maxFitness;
+        private readonly float _minFitness;
+        private readonly float _varianceFitness;
+        private readonly float _standardDeviationFitness;
 
-        public Database_IterationEntry(int currentIteration, float successRatio, int numSuccessfulAgents,
-            int numCrashedAgents, int milliseconds, float averageFitness, float maxFitness)
+        public Database_IterationEntry(int simulationID, float successRatio, int numSuccessfulAgents,
+            int numCrashedAgents, int milliseconds, float averageFitness, float medianFitness,
+            float maxFitness, float minFitness, float varianceFitness, float standardDeviationFitness)
         {
-            _currentIteration = currentIteration;
+            _simulationID = simulationID;
             _successRatio = successRatio;
             _numSuccessfulAgents = numSuccessfulAgents;
             _numCrashedAgents = numCrashedAgents;
             _milliseconds = milliseconds;
             _averageFitness = averageFitness;
+            _medianFitness = medianFitness;
             _maxFitness = maxFitness;
+            _minFitness = minFitness;
+            _varianceFitness = varianceFitness;
+            _standardDeviationFitness = standardDeviationFitness;
         }
 
         public override string ToString()
         {
             return
-                $"INSERT INTO iterations (currentIteration, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, maxFitness) VALUES " +
-                $"('{_currentIteration}', '{_successRatio}', '{_numSuccessfulAgents}','{_numSuccessfulAgents}', '{_milliseconds}','{_averageFitness}','{_maxFitness}');";
+                $"INSERT INTO iterations (simulation, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, medianFitness, maxFitness, minFitness, varianceFitness, statandardDeviationFitness) VALUES " +
+                $"('{_simulationID}', '{_successRatio}', '{_numSuccessfulAgents}','{_numCrashedAgents}', '{_milliseconds}','{_averageFitness}','{_medianFitness}','{_maxFitness}','{_minFitness}','{_varianceFitness}','{_standardDeviationFitness}');";
         }
     }
 
@@ -104,34 +138,36 @@ public static class Database
         command.CommandText = "PRAGMA foreign_keys=on;";
         command.ExecuteNonQuery();
 
-        command.CommandText = "DROP TABLE iterations;";
+        /*command.CommandText = "DROP TABLE iterations;";
         command.ExecuteNonQuery();
         command.CommandText = "DROP TABLE simulations;";
-        command.ExecuteNonQuery();
+        command.ExecuteNonQuery();*/
 
+
+        command.CommandText = "CREATE TABLE IF NOT EXISTS simulations (simulationID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                              "distanceType VARCHAR(255) CHECK(distanceType = 'Euclidean' OR distanceType = 'Manhattan' OR distanceType = 'Chebyshev')," +
+                              "startingNumAgents INTEGER," +
+                              "startingNumMovements INTEGER," +
+                              "elitism INTEGER," +
+                              "mutationChance REAL," +
+                              "mapID VARCHAR(255) CHECK(mapID = 'DiagonalObstacles' OR mapID = 'DiagonalObstacles1' OR mapID = 'DiagonalObstacles2' OR mapID = 'StraightObstacles' OR mapID = 'StraightObstacles1' OR mapID = 'StraightObstacles2')" +
+                              ");";
+        command.ExecuteNonQuery();
         command.CommandText = "CREATE TABLE IF NOT EXISTS iterations (iterationID INTEGER PRIMARY KEY AUTOINCREMENT," +
-                              "currentIteration INTEGER," +
+                              "simulation INTEGER," +
                               "successRatio REAL," +
                               "numSuccessfulAgents INTEGER," +
                               "numCrashedAgents INTEGER," +
                               "milliseconds INTEGER," +
                               "averageFitness REAL," +
-                              "maxFitness REAL" +
+                              "medianFitness REAL," +
+                              "maxFitness REAL," +
+                              "minFitness REAL," +
+                              "varianceFitness REAL," +
+                              "statandardDeviationFitness REAL," +
+                              "FOREIGN KEY (simulation) REFERENCES simulations(simulationID)" +
                               ");";
 
-        command.ExecuteNonQuery();
-
-        command.CommandText =
-            "CREATE TABLE IF NOT EXISTS simulations (simulationID INTEGER PRIMARY KEY AUTOINCREMENT," +
-            "distanceType VARCHAR(255) CHECK(distanceType = 'Euclidean' OR distanceType = 'Manhattan' OR distanceType = 'Chebyshev')," +
-            "startingNumAgents INTEGER," +
-            "elitism INTEGER," +
-            "mutationChance REAL," +
-            "parentMutationWeight REAL CHECK(parentMutationWeight >= 0 OR parentMutationWeight <= 1)," +
-            "usesPoisson BOOLEAN NOT NULL CHECK (usesPoisson IN (0, 1))," +
-            "firstSuccessfulIteration INTEGER," +
-            "FOREIGN KEY (firstSuccessfulIteration) REFERENCES iterations(iterationID)" +
-            ");";
         command.ExecuteNonQuery();
     }
 
@@ -145,5 +181,16 @@ public static class Database
     {
         command.CommandText = iterationEntry.ToString();
         command.ExecuteNonQuery();
+    }
+
+    public static int GetNumSimulationsInDatabse()
+    {
+        command.CommandText = "SELECT COUNT(*) FROM simulations;";
+        SqliteDataReader reader = command.ExecuteReader();
+        reader.Read();
+        int numSimulations = Convert.ToInt32(reader.GetValue(0)); 
+        reader.Close();
+
+        return numSimulations;
     }
 }

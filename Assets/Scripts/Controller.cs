@@ -61,6 +61,8 @@ public class Controller : MonoBehaviour
     public float stopDuration;
     public float time;
 
+    [SerializeField] private int SavedSimulations;
+
     [Space]
     public bool useGPU = true;
     public bool useCPU = true;
@@ -121,6 +123,8 @@ public class Controller : MonoBehaviour
         Database.CreateDB();
         StartCoroutine(Wait());
 
+        SavedSimulations = Database.GetNumSimulationsInDatabse();
+        Database.AddSimulation(new Database.Database_SimulationEntry(Settings.typeOfDistance, Settings.populationSize, Settings.movements, Settings.elitism, Settings.mutationProb, Settings.map));
     }
 
     private IEnumerator Wait()
