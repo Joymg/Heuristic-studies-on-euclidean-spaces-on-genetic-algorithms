@@ -87,6 +87,9 @@ public class Controller : MonoBehaviour
     public Vector2[] collisionsGPU;
     public Vector2[] collisionsCPU;
 
+    bool canDoNextIteration;
+
+
     private void Awake()
     {
         Instance = this;
@@ -106,18 +109,22 @@ public class Controller : MonoBehaviour
         spawn = mapSelected.spawn;
         target = mapSelected.target;
 
-        switch (simulationType)
-        {
-            case SimulationType.UnityPhysics:
-                population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
-                break;
-            case SimulationType.CPUMath:
-                cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position);
-                break;
-            case SimulationType.GPUMath:
-                //gpuCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
-                break;
-        }
+        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+        cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
+
+
+        //switch (simulationType)
+        //{
+        //    case SimulationType.UnityPhysics:
+        //        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+        //        break;
+        //    case SimulationType.CPUMath:
+        //        cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position);
+        //        break;
+        //    case SimulationType.GPUMath:
+        //        //gpuCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+        //        break;
+        //}
 
 
         Database.CreateDB();
@@ -130,8 +137,8 @@ public class Controller : MonoBehaviour
     private IEnumerator Wait()
     {
         yield return new WaitForSecondsRealtime(2f);
-        //CPUTester.isCalculating = false;
-        //GPUCalculator.isCalculating = false;
+        cpuTester.isCalculating = false;
+        GPUCalculator.isCalculating = false;
     }
 
     private void FixedUpdate()
@@ -145,15 +152,15 @@ public class Controller : MonoBehaviour
         //    }
         //}
 
-        //if (useCPU)
-        //{
-        //    if (!CPUTester.isCalculating)
-        //    {
-        //        CPUTester.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+        if (useCPU)
+        {
+            if (!cpuTester.isCalculating)
+            {
+                cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
 
-        //        //StartCoroutine(Wait());
-        //    }
-        //}
+                //StartCoroutine(Wait());
+            }
+        }
 
         if (simulationType == SimulationType.UnityPhysics)
         {
@@ -163,6 +170,12 @@ public class Controller : MonoBehaviour
                 population.Tick();
             }
             else
+            {
+                cpuTester.CalculatePopulationFitness();
+                population.CalculatePopulationFitness();
+            }
+            
+            if(!population.IsRunning && canDoNextIteration)
             {
                 if (numIterations >= Settings.iterations)
                 {
@@ -182,10 +195,16 @@ public class Controller : MonoBehaviour
                 IncrementIteration?.Invoke();
                 numIterations++;
 
-                //CPUTester.isCalculating = false;
-                //GPUCalculator.isCalculating = false;
+                cpuTester.isCalculating = false;
+                GPUCalculator.isCalculating = false;
+                canDoNextIteration = false;
             }
         }
+    }
+
+    public void DoNextIteration()
+    {
+        canDoNextIteration = true;
     }
 
     private void OnDrawGizmos()
@@ -201,8 +220,6 @@ public class Controller : MonoBehaviour
             Gizmos.DrawSphere(collisionsCPU[i], 0.2f);
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(collisionsGPU[i], 0.1f);
-
         }
-
     }
 }

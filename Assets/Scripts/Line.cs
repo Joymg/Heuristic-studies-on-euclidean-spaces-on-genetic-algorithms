@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[System.Serializable]
 public struct Line
 {
     public Vector2 u, v;
