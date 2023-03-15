@@ -1366,6 +1366,7 @@ MonoBehaviour:
   mutationChance: 0.05
   stopDuration: 1.5
   time: 0
+  SavedSimulations: 0
   useGPU: 0
   useCPU: 1
   simulationType: 0
@@ -1374,7 +1375,9 @@ MonoBehaviour:
     numAgents: 0
     numMovements: 0
     numObstacles: 0
+    agentsPathLines: []
     collisionPoints: []
+    obstaclesArray: []
     hasAgentCrashed: 
     indexOfFirstCollision: 
     lastAgentValidPosition: []
@@ -1382,6 +1385,7 @@ MonoBehaviour:
     hasAgentReachedTarget: 
     bestPosition: []
     bestPositionDistance: []
+    populationFitness: []
     populationDna: []
   population: {fileID: 692601150}
   spawn: {fileID: 518787090}
@@ -2088,7 +2092,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1309385811
 RectTransform:
   m_ObjectHideFlags: 0

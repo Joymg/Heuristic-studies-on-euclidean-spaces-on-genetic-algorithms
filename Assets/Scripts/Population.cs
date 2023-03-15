@@ -160,7 +160,7 @@ public class Population : MonoBehaviour
     public void NextGeneration()
     {
         CalculatePopulationFitness();
-        Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
+        //Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
         GetElites();
 
         //Time to learn so we take the numElites best from the nextElites list (calculate fitness first), save them in currentElite,

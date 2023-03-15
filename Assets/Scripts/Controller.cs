@@ -49,6 +49,7 @@ public class Controller : MonoBehaviour
         public static TypeOfDistance typeOfDistance = 0;
         public static Map map = 0;
         public static SimulationType simualtionType = SimulationType.UnityPhysics;
+        public static int numberOfSimulations = 1;
     }
 
     public int numAgents;
@@ -100,6 +101,7 @@ public class Controller : MonoBehaviour
         numMovements = Settings.movements;
         mutationChance = Settings.mutationProb;
         Time.timeScale = Settings.speed;
+        simulationType = Settings.simualtionType;
 
         MapSelection mapSelected = maps.Find(x => x.mapEnum == Settings.map);
         mapSelected.mapObject.SetActive(true);
@@ -109,29 +111,27 @@ public class Controller : MonoBehaviour
         spawn = mapSelected.spawn;
         target = mapSelected.target;
 
-        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
-        cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
-
-
-        //switch (simulationType)
-        //{
-        //    case SimulationType.UnityPhysics:
-        //        population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
-        //        break;
-        //    case SimulationType.CPUMath:
-        //        cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position);
-        //        break;
-        //    case SimulationType.GPUMath:
-        //        //gpuCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
-        //        break;
-        //}
-
+        //population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+        //cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
 
         Database.CreateDB();
+
+        switch (simulationType)
+        {
+            case SimulationType.UnityPhysics:
+                population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+                break;
+            case SimulationType.CPUMath:
+                cpuTester.Initialize(Settings.populationSize, Settings.numberOfSimulations, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
+                break;
+            case SimulationType.GPUMath:
+                //gpuCalculator.Initialize(Settings.populationSize, Settings.movements, obstacles.Count, obstacles.ToArray());
+                break;
+        }
+
         StartCoroutine(Wait());
 
         SavedSimulations = Database.GetNumSimulationsInDatabse();
-        Database.AddSimulation(new Database.Database_SimulationEntry(Settings.typeOfDistance, Settings.populationSize, Settings.movements, Settings.elitism, Settings.mutationProb, Settings.map));
     }
 
     private IEnumerator Wait()
@@ -152,15 +152,15 @@ public class Controller : MonoBehaviour
         //    }
         //}
 
-        if (useCPU)
-        {
-            if (!cpuTester.isCalculating)
-            {
-                cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
+        //if (useCPU)
+        //{
+        //    if (!cpuTester.isCalculating)
+        //    {
+        //        cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
 
-                //StartCoroutine(Wait());
-            }
-        }
+        //        //StartCoroutine(Wait());
+        //    }
+        //}
 
         if (simulationType == SimulationType.UnityPhysics)
         {
@@ -169,13 +169,13 @@ public class Controller : MonoBehaviour
             {
                 population.Tick();
             }
-            else
-            {
-                cpuTester.CalculatePopulationFitness();
-                population.CalculatePopulationFitness();
-            }
+            //else
+            //{
+            //    cpuTester.CalculatePopulationFitness();
+            //    population.CalculatePopulationFitness();
+            //}
             
-            if(!population.IsRunning && canDoNextIteration)
+            if(!population.IsRunning )//&& canDoNextIteration)
             {
                 if (numIterations >= Settings.iterations)
                 {
@@ -195,9 +195,9 @@ public class Controller : MonoBehaviour
                 IncrementIteration?.Invoke();
                 numIterations++;
 
-                cpuTester.isCalculating = false;
-                GPUCalculator.isCalculating = false;
-                canDoNextIteration = false;
+                //cpuTester.isCalculating = false;
+                //GPUCalculator.isCalculating = false;
+                //canDoNextIteration = false;
             }
         }
     }

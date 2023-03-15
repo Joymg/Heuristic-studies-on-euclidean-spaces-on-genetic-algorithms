@@ -26,7 +26,7 @@ public class CPUTester
         }
 
     }
-
+    [SerializeField] private int currentSimulationIndex;
     public bool isCalculating;
 
     public int numAgents;
@@ -60,8 +60,50 @@ public class CPUTester
 
     private List<EliteDna> matingPool;
 
-    public void Initialize(int population, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target,Vector3 spawn)
+    public int SuccessfulAgents => hasAgentReachedTarget.ToList().Count(num => num == 1);
+    public int CrashedAgents => hasAgentCrashed.ToList().Count(num => num == 1);
+
+    public float RatioOfSuccess => (float)SuccessfulAgents / numAgents;
+    public float AverageFitness => populationDna.Sum(agent => agent.fitness) / numAgents;
+    public float MaxFitness => populationDna.Max(agent => agent.fitness);
+    public float MinFitness => populationDna.Min(agent => agent.fitness);
+    public float MedianFitness
     {
+        get
+        {
+            populationDna.OrderBy(x => x.fitness);
+            return numAgents % 2 == 0 ? (populationDna[numAgents / 2].fitness + populationDna[(int)(numAgents / 2) - 1].fitness) / 2 : populationDna[numAgents / 2].fitness;
+        }
+    }
+
+    public float StandardDeviationFitness
+    {
+        get
+        {
+            populationDna.OrderBy(x => x.fitness);
+            float sum = 0;
+            for (int i = 0; i < numAgents; i++)
+            {
+                sum += populationDna[i].fitness * populationDna[i].fitness;
+            }
+            var avg = AverageFitness;
+            return Mathf.Sqrt(((sum * sum) / numAgents) - (avg * avg));
+        }
+    }
+
+    public float VarianceFitness
+    {
+        get
+        {
+            var standardDeviation = StandardDeviationFitness;
+            return standardDeviation * standardDeviation;
+        }
+    }
+
+
+    public void Initialize(int population, int simulations, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target, Vector3 spawn)
+    {
+        //GenerateNewPopulation(population, movements, obstacles, mapObstacles, typeOfDistance, target, spawn);
         isCalculating = true;
         numAgents = population;
         numMovements = movements;
@@ -89,23 +131,54 @@ public class CPUTester
         bestPosition = new Vector2[population];
         bestPositionDistance = new float[population];
 
-        populationFitness = new float[population];                   //DELETE LATER
+        currentSimulationIndex = 1;
+
+        for (int i = 0; i < obstacles; i++)
+        {
+            obstaclesArray[i] = (ObstacleData)mapObstacles[i];
+        }
+
+        //for (int i = 0; i < numAgents; i++)
+        //{
+        //    for (int j = 0; j < numMovements; j++)
+        //    {
+        //        for (int k = 0; k < numObstacles; k++)
+        //        {
+        //            Calculate(new Vector3Int(i, j, k));
+        //        }
+        //    }
+        //}
+        for (int i = 0; i < simulations; i++)
+        {
+
+            GenerateNewPopulation(population, movements, spawn);
+            Database.AddSimulation(new Database.Database_SimulationEntry(typeOfDistance, population, movements, Controller.Settings.elitism, Controller.Settings.mutationProb, Controller.Settings.map));
+            currentSimulationIndex = Database.GetNumSimulationsInDatabse();
+            for (int j = 0; j < iterations; j++)
+            {
+                CPUIteration();
+            }
+        }
+    }
+
+    private void GenerateNewPopulation(int population, int movements, Vector3 spawn)
+    {
 
         for (int i = 0; i < population; i++)
         {
-            Dna currentAgentDna = Controller.Instance.population.AgentList[i].Dna;
+            //Dna currentAgentDna = Controller.Instance.population.AgentList[i].Dna;
 
-            //Dna currentAgentDna = new Dna();                                      CHANGE TO DO INDEPENDENT CPU CALCULATION
-            //populationDna[i] = new EliteDna(currentAgentDna);
+            Dna currentAgentDna = new Dna();
+            populationDna[i] = new EliteDna(currentAgentDna);
 
-            agentsPathLines[i * movements]= new Line(
+            agentsPathLines[i * movements] = new Line(
                     spawn,
                     currentAgentDna.Lines[0]);
             for (int j = 1; j < movements; j++)
             {
                 agentsPathLines[i * movements + j] = new Line(
-                    currentAgentDna.Lines[j-1],
-                    currentAgentDna.Lines[j ]);
+                    currentAgentDna.Lines[j - 1],
+                    currentAgentDna.Lines[j]);
             }
 
             hasAgentCrashed[i] = 0;
@@ -116,29 +189,7 @@ public class CPUTester
             bestPosition[i] = currentAgentDna.Lines[movements - 1];
             bestPositionDistance[i] = float.MaxValue;
         }
-
-        for (int i = 0; i < obstacles; i++)
-        {
-            obstaclesArray[i] = (ObstacleData)mapObstacles[i];
-        }
-
-        for (int i = 0; i < numAgents; i++)
-        {
-            for (int j = 0; j < numMovements; j++)
-            {
-                for (int k = 0; k < numObstacles; k++)
-                {
-                    Calculate(new Vector3Int(i, j, k));
-                }
-            }
-        }
-
-        //for (int i = 0; i < iterations; i++)                                      CHANGE TO DO INDEPENDENT CPU CALCULATION
-        //{
-        //    CPUIteration();
-        //}
     }
-
 
     private bool LineLine(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, out Vector2 collision)
     {
@@ -218,9 +269,6 @@ public class CPUTester
         }
         collision = collisions[index];
 
-        if (left || right || top || bottom)
-            Debug.Log("1");
-
         return left || right || top || bottom;
     }
 
@@ -248,7 +296,7 @@ public class CPUTester
 
             bool improvesBestDistance = bestPositionDistance[id.x] > distanceToTargetThisMovement;
 
-            hasAgentReachedTarget[id.x] = distanceToTargetThisMovement <= 0.5f ? 1 : 0;
+            hasAgentReachedTarget[id.x] = (hasAgentReachedTarget[id.x] == 1) || (distanceToTargetThisMovement <= 0.5f) ? 1 : 0;
 
             bestPositionDistance[id.x] = (hasAgentCrashed[id.x] != 1 && improvesBestDistance) ? distanceToTargetThisMovement : bestPositionDistance[id.x];
 
@@ -275,7 +323,9 @@ public class CPUTester
             }
         }
         CalculatePopulationFitness();
-        //add iteration data base
+
+        Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
+
         GetElites();
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
         {
@@ -312,7 +362,7 @@ public class CPUTester
             Reproduction();
             SetElites();
         }
-        
+
 
         Controller.Instance.collisionsCPU = lastAgentValidPosition;
     }
@@ -343,8 +393,8 @@ public class CPUTester
                 fitness *= 4;
                 fitness *= (((numMovements - indexOfLastAgentValidMovement[i]) / (float)numMovements) + 1);
             }
-            //populationDna[i].fitness = fitness;
-            populationFitness[i] = fitness;                                //DELETE LATER
+            populationDna[i].fitness = fitness;
+            //populationFitness[i] = fitness;              
         }
     }
     private float CalculateDistance(Vector2 finalPoint)
