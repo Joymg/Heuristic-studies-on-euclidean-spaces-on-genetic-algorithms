@@ -110,7 +110,13 @@ public class Controller : MonoBehaviour
         //population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
         //cpuTester.Initialize(Settings.populationSize, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
 
-        Database.CreateDB();
+        Database.CreateDB($"{Settings.populationSize}_" +
+            $"{Settings.iterations}_" +
+            $"{Settings.movements}_" +
+            $"{Settings.elitism}_" +
+            $"{Settings.learningPeriod}_" +
+            $"{Settings.mutationProb*100}_" +
+            $"{Settings.typeOfDistance}_Simulation.db");
 
         switch (simulationType)
         {

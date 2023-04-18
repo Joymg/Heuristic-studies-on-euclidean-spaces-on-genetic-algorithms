@@ -113,7 +113,7 @@ public static class Database
         }
     }
 
-    private const string randomIndividualsDBName = "URI=file:Simulation.db";
+    private const string randomIndividualsDBName = "URI=file:";
     public static List<Agent> BestRandomAgents = new List<Agent>();
 
     public static void SaveBestRandomAgents(List<Agent> agents)
@@ -129,19 +129,20 @@ public static class Database
     }
 
 
-    public static void CreateDB()
+    public static void CreateDB(string nameConfiguration)
     {
-        connection = new SqliteConnection(randomIndividualsDBName);
+        string fullName = $"{randomIndividualsDBName}{nameConfiguration}";
+        connection = new SqliteConnection(fullName);
         connection.Open();
 
         command = connection.CreateCommand();
         command.CommandText = "PRAGMA foreign_keys=on;";
         command.ExecuteNonQuery();
 
-        command.CommandText = "DROP TABLE iterations;";
+        /*command.CommandText = "DROP TABLE iterations;";
         command.ExecuteNonQuery();
         command.CommandText = "DROP TABLE simulations;";
-        command.ExecuteNonQuery();
+        command.ExecuteNonQuery();*/
 
 
         command.CommandText = "CREATE TABLE IF NOT EXISTS simulations (simulationID INTEGER PRIMARY KEY AUTOINCREMENT," +
