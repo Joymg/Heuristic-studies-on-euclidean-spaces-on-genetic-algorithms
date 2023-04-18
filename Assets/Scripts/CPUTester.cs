@@ -287,15 +287,14 @@ public class CPUTester
             obstaclesArray[id.z],
             out collisionPoints[id.x]);
 
-            bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || intersects) ? true : false;
+            float distanceToTargetThisMovement = intersects ? CalculateDistance(collisionPoints[id.x]) : CalculateDistance(agentsPathLines[currentAgentLineIndex].v);
+            hasAgentReachedTarget[id.x] = (hasAgentReachedTarget[id.x] == 1) || ((distanceToTargetThisMovement <= 0.5f) && hasAgentCrashed[id.x] != 1) ? 1 : 0;
+
+            bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || (intersects && hasAgentReachedTarget[id.x] != 1)) ? true : false;
 
             bool improves = (int)id.y < indexOfFirstCollision[id.x];
 
-            float distanceToTargetThisMovement = intersects ? CalculateDistance(collisionPoints[id.x]) : CalculateDistance(agentsPathLines[currentAgentLineIndex].v);
-
             bool improvesBestDistance = bestPositionDistance[id.x] > distanceToTargetThisMovement;
-
-            hasAgentReachedTarget[id.x] = (hasAgentReachedTarget[id.x] == 1) || (distanceToTargetThisMovement <= 0.5f) ? 1 : 0;
 
             bestPositionDistance[id.x] = (hasAgentCrashed[id.x] != 1 && improvesBestDistance) ? distanceToTargetThisMovement : bestPositionDistance[id.x];
 
@@ -480,15 +479,14 @@ public class CPUTester
     {
         for (int i = 0; i < Controller.Settings.elitism; i++)
         {
-            int index = Random.Range(0, numAgents);
-            populationDna[index] = new EliteDna(currentElite[i].dna);
+            populationDna[i] = new EliteDna(currentElite[i].dna);
             for (int j = 0; j < numMovements - 1; j++)
             {
-                agentsPathLines[index * numMovements + j] = new Line(
+                agentsPathLines[i * numMovements + j] = new Line(
                     currentElite[i].dna.Lines[j],
                     currentElite[i].dna.Lines[j + 1]);
             }
-            bestPosition[index] = currentElite[i].dna.Lines[numMovements - 1];
+            bestPosition[i] = currentElite[i].dna.Lines[numMovements - 1];
         }
     }
 }
