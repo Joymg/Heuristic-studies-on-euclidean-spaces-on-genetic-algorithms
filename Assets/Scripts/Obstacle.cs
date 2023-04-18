@@ -10,7 +10,7 @@ public class Obstacle : MonoBehaviour
 
     public BoxCollider2D collider;
 
-    [ContextMenu("Calclate Vertex")]
+    [ContextMenu("Calculate Vertex")]
     public void CalculateVertex()
     {
         collider = GetComponent<BoxCollider2D>();

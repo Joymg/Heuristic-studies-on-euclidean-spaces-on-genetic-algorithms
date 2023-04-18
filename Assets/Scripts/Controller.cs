@@ -65,8 +65,6 @@ public class Controller : MonoBehaviour
     [SerializeField] private int SavedSimulations;
 
     [Space]
-    public bool useGPU = true;
-    public bool useCPU = true;
     public SimulationType simulationType;
 
     public CPUTester cpuTester;
@@ -87,8 +85,6 @@ public class Controller : MonoBehaviour
 
     public Vector2[] collisionsGPU;
     public Vector2[] collisionsCPU;
-
-    bool canDoNextIteration;
 
 
     private void Awake()
@@ -119,7 +115,7 @@ public class Controller : MonoBehaviour
         switch (simulationType)
         {
             case SimulationType.UnityPhysics:
-                population.Initialize(Settings.populationSize, Settings.movements, Settings.mutationProb, Settings.typeOfDistance, spawn, target);
+                population.Initialize(Settings.populationSize, Settings.movements, Settings.typeOfDistance, spawn, target);
                 break;
             case SimulationType.CPUMath:
                 cpuTester.Initialize(Settings.populationSize, Settings.numberOfSimulations, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
@@ -202,10 +198,6 @@ public class Controller : MonoBehaviour
         }
     }
 
-    public void DoNextIteration()
-    {
-        canDoNextIteration = true;
-    }
 
     private void OnDrawGizmos()
     {

@@ -16,10 +16,6 @@ public class Population : MonoBehaviour
 {
     private int numAgents;
     private int numMovements;
-    [SerializeField]
-    private float mutationChance;
-    private int numEliteAgents = 3;
-    private int generations = 0;
 
     private Vector2 spawnPoint;
     private Vector2 targetPoint;
@@ -87,7 +83,7 @@ public class Population : MonoBehaviour
 
     public List<Agent> AgentList => population;
 
-    public void Initialize(int numAgents, int numMovements, float mutationChance, TypeOfDistance typeOfDistance, Transform spawn, Transform target)
+    public void Initialize(int numAgents, int numMovements, TypeOfDistance typeOfDistance, Transform spawn, Transform target)
     {
         population = new List<Agent>();
         matingPool = new List<EliteDna>();
@@ -96,7 +92,6 @@ public class Population : MonoBehaviour
 
         this.numAgents = numAgents;
         this.numMovements = numMovements;
-        this.mutationChance = mutationChance;
 
         this.typeOfDistance = typeOfDistance;
 

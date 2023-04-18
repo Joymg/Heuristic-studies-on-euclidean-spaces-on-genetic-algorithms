@@ -101,7 +101,7 @@ public class CPUTester
     }
 
 
-    public void Initialize(int population, int simulations, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target, Vector3 spawn)
+    public void Initialize(int population, int simulations, int iterations, int movements, int obstacles, Obstacle[] mapObstacles, TypeOfDistance typeOfDistance, Vector2 target, Vector2 spawn)
     {
         //GenerateNewPopulation(population, movements, obstacles, mapObstacles, typeOfDistance, target, spawn);
         isCalculating = true;
