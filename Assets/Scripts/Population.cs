@@ -56,14 +56,7 @@ public class Population : MonoBehaviour
     {
         get
         {
-            population.OrderBy(x => x.fitness);
-            float sum = 0;
-            for (int i = 0; i < numAgents; i++)
-            {
-                sum += population[i].fitness * population[i].fitness;
-            }
-            var avg = AverageFitness;
-            return Mathf.Sqrt((sum / numAgents) - (avg * avg));
+            return Mathf.Sqrt(VarianceFitness);
         }
     }
 
@@ -71,8 +64,14 @@ public class Population : MonoBehaviour
     {
         get
         {
-            var standardDeviation = StandardDeviationFitness;
-            return standardDeviation * standardDeviation;
+            float average = AverageFitness;
+            float sumOfSquares = 0f;
+
+            for (int i = 0; i < numAgents; i++)
+            {
+                sumOfSquares += (population[i].fitness - average) * (population[i].fitness - average);
+            }
+            return sumOfSquares / (float)numAgents;
         }
     }
 

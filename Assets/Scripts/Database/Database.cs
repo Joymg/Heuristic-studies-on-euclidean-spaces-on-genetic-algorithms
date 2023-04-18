@@ -108,7 +108,7 @@ public static class Database
         public override string ToString()
         {
             return
-                $"INSERT INTO iterations (simulation, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, medianFitness, maxFitness, minFitness, varianceFitness, statandardDeviationFitness) VALUES " +
+                $"INSERT INTO iterations (simulation, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, medianFitness, maxFitness, minFitness, varianceFitness, standardDeviationFitness) VALUES " +
                 $"('{_simulationID}', '{_successRatio}', '{_numSuccessfulAgents}','{_numCrashedAgents}', '{_milliseconds}','{_averageFitness}','{_medianFitness}','{_maxFitness}','{_minFitness}','{_varianceFitness}','{_standardDeviationFitness}');";
         }
     }
@@ -138,10 +138,10 @@ public static class Database
         command.CommandText = "PRAGMA foreign_keys=on;";
         command.ExecuteNonQuery();
 
-        /*command.CommandText = "DROP TABLE iterations;";
+        command.CommandText = "DROP TABLE iterations;";
         command.ExecuteNonQuery();
         command.CommandText = "DROP TABLE simulations;";
-        command.ExecuteNonQuery();*/
+        command.ExecuteNonQuery();
 
 
         command.CommandText = "CREATE TABLE IF NOT EXISTS simulations (simulationID INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -164,7 +164,7 @@ public static class Database
                               "maxFitness REAL," +
                               "minFitness REAL," +
                               "varianceFitness REAL," +
-                              "statandardDeviationFitness REAL," +
+                              "standardDeviationFitness REAL," +
                               "FOREIGN KEY (simulation) REFERENCES simulations(simulationID)" +
                               ");";
 

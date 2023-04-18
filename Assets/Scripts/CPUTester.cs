@@ -80,14 +80,7 @@ public class CPUTester
     {
         get
         {
-            populationDna.OrderBy(x => x.fitness);
-            float sum = 0;
-            for (int i = 0; i < numAgents; i++)
-            {
-                sum += populationDna[i].fitness * populationDna[i].fitness;
-            }
-            var avg = AverageFitness;
-            return Mathf.Sqrt(((sum * sum) / numAgents) - (avg * avg));
+            return Mathf.Sqrt(VarianceFitness);
         }
     }
 
@@ -95,8 +88,14 @@ public class CPUTester
     {
         get
         {
-            var standardDeviation = StandardDeviationFitness;
-            return standardDeviation * standardDeviation;
+            float average = AverageFitness;
+            float sumOfSquares = 0f;
+
+            for (int i = 0; i < numAgents; i++)
+            {
+                sumOfSquares += (populationDna[i].fitness - average) * (populationDna[i].fitness - average);
+            }
+            return sumOfSquares / (float)numAgents;
         }
     }
 
