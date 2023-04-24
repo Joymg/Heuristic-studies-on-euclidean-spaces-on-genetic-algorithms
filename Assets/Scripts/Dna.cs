@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using UnityEditor;
 
 [System.Serializable]
 public class Dna
@@ -24,7 +26,7 @@ public class Dna
             Genes = new List<Vector2>();
             for (int i = 0; i < Controller.Instance.numMovements; i++)
             {
-                Genes.Add(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized );
+                Genes.Add(new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized );
             }
         }
 
@@ -40,7 +42,7 @@ public class Dna
         List<Vector2> child = new List<Vector2>();
         int padding = (int)Mathf.Floor(Controller.Instance.numMovements * 0.2f);
 
-        int crossoverIndex = Random.Range(0 + padding, Controller.Instance.numMovements - padding);
+        int crossoverIndex = UnityEngine.Random.Range(0 + padding, Controller.Instance.numMovements - padding);
 
         for (int i = 0; i < Controller.Instance.numMovements; i++)
         {
@@ -58,9 +60,9 @@ public class Dna
     {
         for (int i = 0; i < Controller.Instance.numMovements; i++)
         {
-            if (Random.Range(0, 1f) < Controller.Instance.mutationChance)
+            if (UnityEngine.Random.Range(0, 1f) < Controller.Instance.mutationChance)
             {
-                Genes[i] = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized;
+                Genes[i] = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized;
             }
         }
 
@@ -71,6 +73,7 @@ public class Dna
     {
         Lines = new List<Vector2>();
         Vector2 initialPosition = (Vector2)Controller.Instance.spawn.transform.position;
+        Lines.Add(initialPosition);
         for (int i = 0; i < Genes.Count; i++)
         {
             initialPosition = initialPosition + Genes[i];
@@ -82,20 +85,24 @@ public class Dna
 [System.Serializable]
 public class EliteDna
 {
+    Guid guid;
     public EliteDna(Agent agent)
     {
+        guid = Guid.NewGuid();
         dna = agent.Dna;
         fitness = agent.fitness;
     }
 
     public EliteDna(EliteDna eliteDna)
     {
+        guid= eliteDna.guid;
         dna = eliteDna.dna;
         fitness = eliteDna.fitness;
     }
 
     public EliteDna(Dna dna)
     {
+        guid = Guid.NewGuid();
         this.dna = dna;
     }
 

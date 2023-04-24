@@ -48,9 +48,11 @@ public class CPUTester
     public int[] indexOfLastAgentValidMovement;
 
     public int[] hasAgentReachedTarget;
+    public int[] indexOfFirstArriveCollision;
 
     public Vector2[] bestPosition;
     public float[] bestPositionDistance;
+    public float[] lastPositionDistance;
 
     public float[] populationFitness;
 
@@ -71,8 +73,9 @@ public class CPUTester
     {
         get
         {
-            populationDna.OrderBy(x => x.fitness);
-            return numAgents % 2 == 0 ? (populationDna[numAgents / 2].fitness + populationDna[(int)(numAgents / 2) - 1].fitness) / 2 : populationDna[numAgents / 2].fitness;
+            //populationDna.OrderBy(x => x.fitness);
+            //return numAgents % 2 == 0 ? (populationDna[numAgents / 2].fitness + populationDna[(int)(numAgents / 2) - 1].fitness) / 2 : populationDna[numAgents / 2].fitness;
+            return 0;
         }
     }
 
@@ -124,10 +127,12 @@ public class CPUTester
         hasAgentCrashed = new int[population];
         hasAgentReachedTarget = new int[population];
         collisionPoints = new Vector2[population];
+        indexOfFirstArriveCollision = new int[population];
         indexOfFirstCollision = new int[population];
         lastAgentValidPosition = new Vector2[population];
         indexOfLastAgentValidMovement = new int[population];
         bestPosition = new Vector2[population];
+        lastPositionDistance = new float[population];
         bestPositionDistance = new float[population];
 
         currentSimulationIndex = 1;
@@ -170,23 +175,23 @@ public class CPUTester
             Dna currentAgentDna = new Dna();
             populationDna[i] = new EliteDna(currentAgentDna);
 
-            agentsPathLines[i * movements] = new Line(
-                    spawn,
-                    currentAgentDna.Lines[0]);
-            for (int j = 1; j < movements; j++)
+            for (int j = 0; j < movements; j++)
             {
                 agentsPathLines[i * movements + j] = new Line(
-                    currentAgentDna.Lines[j - 1],
-                    currentAgentDna.Lines[j]);
+                    currentAgentDna.Lines[j],
+                    currentAgentDna.Lines[j + 1]);
             }
 
             hasAgentCrashed[i] = 0;
             hasAgentReachedTarget[i] = 0;
             collisionPoints[i] = Vector2.zero;
             indexOfFirstCollision[i] = movements - 1;
+            indexOfFirstArriveCollision[i] = movements - 1;
             indexOfLastAgentValidMovement[i] = movements - 1;
             bestPosition[i] = currentAgentDna.Lines[movements - 1];
+            lastAgentValidPosition[i] = currentAgentDna.Lines[numMovements];
             bestPositionDistance[i] = float.MaxValue;
+            lastPositionDistance[i] = float.MaxValue;
         }
     }
 
@@ -288,7 +293,9 @@ public class CPUTester
             out collisionPoints[id.x]);
 
             float distanceToTargetThisMovement = intersects ? CalculateDistance(collisionPoints[id.x]) : CalculateDistance(agentsPathLines[currentAgentLineIndex].v);
-            hasAgentReachedTarget[id.x] = (hasAgentReachedTarget[id.x] == 1) || ((distanceToTargetThisMovement <= 0.5f) && hasAgentCrashed[id.x] != 1) ? 1 : 0;
+            bool arrivedThisMovement = ((distanceToTargetThisMovement <= 0.5f) && hasAgentCrashed[id.x] != 1);
+            indexOfFirstArriveCollision[id.x] = arrivedThisMovement ? id.y : indexOfFirstArriveCollision[id.x];
+            hasAgentReachedTarget[id.x] = (hasAgentReachedTarget[id.x] == 1) || arrivedThisMovement ? 1 : 0;
 
             bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || (intersects && hasAgentReachedTarget[id.x] != 1)) ? true : false;
 
@@ -328,7 +335,7 @@ public class CPUTester
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
         {
             currentElite.Clear();
-
+            learningPeriodAccumulatedElite.OrderByDescending(agent => agent.fitness).ToArray();
             currentElite.AddRange(learningPeriodAccumulatedElite.GetRange(0, Controller.Settings.elitism));
             learningPeriodAccumulatedElite.Clear();
         }
@@ -338,7 +345,8 @@ public class CPUTester
             {
                 Dna currentAgentDna = new Dna();
                 populationDna[i] = new EliteDna(currentAgentDna);
-                for (int j = 0; j < numMovements - 1; j++)
+
+                for (int j = 0; j < numMovements; j++)
                 {
                     agentsPathLines[i * numMovements + j] = new Line(
                         currentAgentDna.Lines[j],
@@ -349,9 +357,12 @@ public class CPUTester
                 hasAgentReachedTarget[i] = 0;
                 collisionPoints[i] = Vector2.zero;
                 indexOfFirstCollision[i] = numMovements - 1;
+                indexOfFirstArriveCollision[i] = numMovements - 1;
                 indexOfLastAgentValidMovement[i] = numMovements - 1;
                 bestPosition[i] = currentAgentDna.Lines[numMovements - 1];
+                lastAgentValidPosition[i] = currentAgentDna.Lines[numMovements];
                 bestPositionDistance[i] = float.MaxValue;
+                lastPositionDistance[i] = float.MaxValue;
             }
         }
         else
@@ -370,10 +381,10 @@ public class CPUTester
         float fitness = 0;
         for (int i = 0; i < numAgents; i++)
         {
-            float distanceToTarget = CalculateDistance(lastAgentValidPosition[i]);
-            if (distanceToTarget < 1)
+            lastPositionDistance[i] = CalculateDistance(lastAgentValidPosition[i]);
+            if (lastPositionDistance[i] < 1)
             {
-                distanceToTarget = 1;
+                lastPositionDistance[i] = 1;
             }
 
             float bestDistance = bestPositionDistance[i];
@@ -382,7 +393,7 @@ public class CPUTester
                 bestDistance = 1;
             }
 
-            fitness = 1000 * 1 / distanceToTarget * 1 / bestDistance;
+            fitness = 1000 * 1 / lastPositionDistance[i] * 1 / bestDistance;
 
             if (hasAgentCrashed[i] == 1)
                 fitness *= .5f;
@@ -458,8 +469,7 @@ public class CPUTester
 
             child.Mutate();
 
-            populationDna[i] = new EliteDna(child);
-            for (int j = 0; j < numMovements - 1; j++)
+            for (int j = 0; j < numMovements; j++)
             {
                 agentsPathLines[i * numMovements + j] = new Line(
                     child.Lines[j],
@@ -469,9 +479,12 @@ public class CPUTester
             hasAgentReachedTarget[i] = 0;
             collisionPoints[i] = Vector2.zero;
             indexOfFirstCollision[i] = numMovements - 1;
+            indexOfFirstArriveCollision[i] = numMovements - 1;
             indexOfLastAgentValidMovement[i] = numMovements - 1;
             bestPosition[i] = child.Lines[numMovements - 1];
+            lastAgentValidPosition[i] = child.Lines[numMovements];
             bestPositionDistance[i] = float.MaxValue;
+            lastPositionDistance[i] = float.MaxValue;
         }
     }
 
@@ -479,14 +492,24 @@ public class CPUTester
     {
         for (int i = 0; i < Controller.Settings.elitism; i++)
         {
-            populationDna[i] = new EliteDna(currentElite[i].dna);
-            for (int j = 0; j < numMovements - 1; j++)
+            populationDna[i] = new EliteDna(currentElite[i]);
+
+            for (int j = 0; j < numMovements; j++)
             {
                 agentsPathLines[i * numMovements + j] = new Line(
                     currentElite[i].dna.Lines[j],
                     currentElite[i].dna.Lines[j + 1]);
             }
+            hasAgentCrashed[i] = 0;
+            hasAgentReachedTarget[i] = 0;
+            collisionPoints[i] = Vector2.zero;
+            indexOfFirstCollision[i] = numMovements - 1;
+            indexOfFirstArriveCollision[i] = numMovements - 1;
+            indexOfLastAgentValidMovement[i] = numMovements - 1;
             bestPosition[i] = currentElite[i].dna.Lines[numMovements - 1];
+            lastAgentValidPosition[i] = currentElite[i].dna.Lines[numMovements];
+            bestPositionDistance[i] = float.MaxValue;
+            lastPositionDistance[i] = float.MaxValue;
         }
     }
 }
