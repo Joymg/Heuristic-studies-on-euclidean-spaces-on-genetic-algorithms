@@ -309,8 +309,7 @@ public class CPUTester
 
             indexOfFirstCollision[id.x] = intersects && improves ? id.y : indexOfFirstCollision[id.x];
 
-            indexOfLastAgentValidMovement[id.x] = intersects && improves ? id.y : indexOfLastAgentValidMovement[id.x];
-            indexOfLastAgentValidMovement[id.x] = hasAgentCrashed[id.x] == 0 && hasAgentReachedTarget[id.x] == 1 ? id.y : indexOfLastAgentValidMovement[id.x];
+            indexOfLastAgentValidMovement[id.x] = intersects && improves || arrivedThisMovement ? id.y : indexOfLastAgentValidMovement[id.x];
 
             lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
         }
@@ -329,7 +328,7 @@ public class CPUTester
         }
         CalculatePopulationFitness();
 
-        Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
+         Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
 
         GetElites();
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
@@ -399,11 +398,10 @@ public class CPUTester
                 fitness *= .5f;
             if (hasAgentReachedTarget[i] == 1)
             {
-                fitness *= 4;
-                fitness *= (((numMovements - indexOfLastAgentValidMovement[i]) / (float)numMovements) + 1);
+                fitness *= 4f;
+                fitness *= (float)((numMovements - indexOfLastAgentValidMovement[i]) / (float)numMovements) + 1f;
             }
-            populationDna[i].fitness = fitness;
-            //populationFitness[i] = fitness;              
+            populationDna[i].fitness = fitness;           
         }
     }
     private float CalculateDistance(Vector2 finalPoint)
@@ -458,7 +456,7 @@ public class CPUTester
 
     public void Reproduction()
     {
-        for (int i = 0; i < populationDna.Length; i++)
+        for (int i = 0; i < numAgents; i++)
         {
             int index1 = Random.Range(0, matingPool.Count);
             int index2 = Random.Range(0, matingPool.Count);
@@ -469,6 +467,8 @@ public class CPUTester
 
             child.Mutate();
 
+            populationDna[i]= new EliteDna(child);
+            
             for (int j = 0; j < numMovements; j++)
             {
                 agentsPathLines[i * numMovements + j] = new Line(

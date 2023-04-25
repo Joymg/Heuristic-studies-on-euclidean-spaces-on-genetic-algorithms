@@ -13,6 +13,7 @@ public class Dna
     public Dna(Dna copydna)
     {
         Genes = new List<Vector2>(copydna.Genes);
+        Lines = new List<Vector2>(copydna.Lines);
     }
 
     public Dna(List<Vector2> newGenes = null)
@@ -26,7 +27,7 @@ public class Dna
             Genes = new List<Vector2>();
             for (int i = 0; i < Controller.Instance.numMovements; i++)
             {
-                Genes.Add(new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized );
+                Genes.Add(new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized);
             }
         }
 
@@ -67,8 +68,8 @@ public class Dna
         }
 
         GenerateGPUData();
-    } 
-    
+    }
+
     private void GenerateGPUData()
     {
         Lines = new List<Vector2>();
@@ -85,27 +86,27 @@ public class Dna
 [System.Serializable]
 public class EliteDna
 {
-    Guid guid;
     public EliteDna(Agent agent)
     {
         guid = Guid.NewGuid();
-        dna = agent.Dna;
+        dna = new Dna(agent.Dna);
         fitness = agent.fitness;
     }
 
     public EliteDna(EliteDna eliteDna)
     {
-        guid= eliteDna.guid;
-        dna = eliteDna.dna;
+        guid = eliteDna.guid;
+        dna = new Dna(eliteDna.dna);
         fitness = eliteDna.fitness;
     }
 
     public EliteDna(Dna dna)
     {
         guid = Guid.NewGuid();
-        this.dna = dna;
+        this.dna = new Dna(dna);
     }
 
+    Guid guid;
     public Dna dna;
     public float fitness;
 }
