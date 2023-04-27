@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -87,6 +88,11 @@ public class Controller : MonoBehaviour
     public Vector2[] collisionsCPU;
 
 
+    public Stopwatch simStopwatch;
+    public Stopwatch iteStopwatch;
+    private bool addedSimulation;
+
+
     private void Awake()
     {
         Instance = this;
@@ -115,13 +121,20 @@ public class Controller : MonoBehaviour
             $"{Settings.movements}_" +
             $"{Settings.elitism}_" +
             $"{Settings.learningPeriod}_" +
-            $"{Settings.mutationProb*100}_" +
-            $"{Settings.typeOfDistance}_Simulation.db");
+            $"{Settings.mutationProb * 100}_" +
+            $"{Settings.typeOfDistance}_" +
+            $"{Settings.simualtionType}_Simulation.db");
+
+        simStopwatch = new Stopwatch();
+        iteStopwatch = new Stopwatch();
+
 
         switch (simulationType)
         {
             case SimulationType.UnityPhysics:
                 population.Initialize(Settings.populationSize, Settings.movements, Settings.typeOfDistance, spawn, target);
+                simStopwatch.Start();
+                iteStopwatch.Start();
                 break;
             case SimulationType.CPUMath:
                 cpuTester.Initialize(Settings.populationSize, Settings.numberOfSimulations, Settings.iterations, Settings.movements, obstacles.Count, obstacles.ToArray(), Settings.typeOfDistance, target.transform.position, spawn.transform.position);
@@ -133,7 +146,10 @@ public class Controller : MonoBehaviour
 
         StartCoroutine(Wait());
 
-        SavedSimulations = Database.GetNumSimulationsInDatabse();
+        SavedSimulations = Database.GetNumSimulationsInDatabase();
+
+        Database.CloseConnection();
+
     }
 
     private IEnumerator Wait()
@@ -176,8 +192,8 @@ public class Controller : MonoBehaviour
             //    cpuTester.CalculatePopulationFitness();
             //    population.CalculatePopulationFitness();
             //}
-            
-            if(!population.IsRunning )//&& canDoNextIteration)
+
+            if (!population.IsRunning)//&& canDoNextIteration)
             {
                 if (numIterations >= Settings.iterations)
                 {
@@ -189,13 +205,45 @@ public class Controller : MonoBehaviour
                     }
                     time = 0;
                     population.RepresentBest();
+                    if (!addedSimulation)
+                    {
+                        addedSimulation = true;
+                        Database.AddIteration(new Database.Database_IterationEntry(numIterations,
+                                                                           population.RatioOfSuccess,
+                                                                           population.SuccessfulAgents,
+                                                                           population.CrashedAgents,
+                                                                           (int)iteStopwatch.ElapsedMilliseconds,
+                                                                           population.AverageFitness,
+                                                                           population.MedianFitness,
+                                                                           population.MaxFitness,
+                                                                           population.MinFitness,
+                                                                           population.VarianceFitness,
+                                                                           population.StandardDeviationFitness));
+                        Database.AddSimulation(new Database.Database_SimulationEntry(Settings.typeOfDistance, Settings.populationSize, Settings.movements, Settings.elitism, Settings.mutationProb, Settings.map, (int)simStopwatch.ElapsedMilliseconds));
+                        simStopwatch.Stop();
+                        iteStopwatch.Stop();
+                    }
                     return;
                 }
 
                 population.NextGeneration();
 
+                Database.AddIteration(new Database.Database_IterationEntry(numIterations,
+                                                                           population.RatioOfSuccess,
+                                                                           population.SuccessfulAgents,
+                                                                           population.CrashedAgents,
+                                                                           (int)iteStopwatch.ElapsedMilliseconds,
+                                                                           population.AverageFitness,
+                                                                           population.MedianFitness,
+                                                                           population.MaxFitness,
+                                                                           population.MinFitness,
+                                                                           population.VarianceFitness,
+                                                                           population.StandardDeviationFitness));
+
+
                 IncrementIteration?.Invoke();
                 numIterations++;
+                iteStopwatch.Restart();
 
                 //cpuTester.isCalculating = false;
                 //GPUCalculator.isCalculating = false;

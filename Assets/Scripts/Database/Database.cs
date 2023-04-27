@@ -17,8 +17,9 @@ public static class Database
         private readonly int _elitism;
         private readonly float _mutationChance;
         private readonly Map _mapID;
+        private readonly int _milliseconds;
 
-        public Database_SimulationEntry(TypeOfDistance distanceType, int startingNumAgents, int startingNumMovements, int elitism, float mutationChance, Map mapID)
+        public Database_SimulationEntry(TypeOfDistance distanceType, int startingNumAgents, int startingNumMovements, int elitism, float mutationChance, Map mapID, int milliseconds)
         {
             _distanceType = distanceType;
             _startingNumAgents = startingNumAgents;
@@ -26,7 +27,9 @@ public static class Database
             _elitism = elitism;
             _mutationChance = mutationChance;
             _mapID = mapID;
+            _milliseconds = milliseconds;
         }
+
 
         public override string ToString()
         {
@@ -70,7 +73,7 @@ public static class Database
             }
 
             return
-                $"INSERT INTO simulations (distanceType, startingNumAgents, startingNumMovements, elitism, mutationChance, mapID)VALUES ('{typeName}', '{_startingNumAgents}', '{_startingNumMovements}', '{_elitism}', '{_mutationChance}', '{mapName}');";
+                $"INSERT INTO simulations (distanceType, startingNumAgents, startingNumMovements, elitism, mutationChance, milliseconds, mapID) VALUES ('{typeName}', '{_startingNumAgents}', '{_startingNumMovements}', '{_elitism}', '{_mutationChance}', '{_milliseconds}', '{_mapID}');";
         }
     }
 
@@ -151,6 +154,7 @@ public static class Database
                               "startingNumMovements INTEGER," +
                               "elitism INTEGER," +
                               "mutationChance REAL," +
+                              "milliseconds INTEGER," +
                               "mapID VARCHAR(255) CHECK(mapID = 'DiagonalObstacles' OR mapID = 'DiagonalObstacles1' OR mapID = 'DiagonalObstacles2' OR mapID = 'StraightObstacles' OR mapID = 'StraightObstacles1' OR mapID = 'StraightObstacles2')" +
                               ");";
         command.ExecuteNonQuery();
@@ -165,8 +169,8 @@ public static class Database
                               "maxFitness REAL," +
                               "minFitness REAL," +
                               "varianceFitness REAL," +
-                              "standardDeviationFitness REAL," +
-                              "FOREIGN KEY (simulation) REFERENCES simulations(simulationID)" +
+                              "standardDeviationFitness REAL" +
+                              //"FOREIGN KEY (simulation) REFERENCES simulations(simulationID)" +
                               ");";
 
         command.ExecuteNonQuery();
@@ -184,7 +188,7 @@ public static class Database
         command.ExecuteNonQuery();
     }
 
-    public static int GetNumSimulationsInDatabse()
+    public static int GetNumSimulationsInDatabase()
     {
         command.CommandText = "SELECT COUNT(*) FROM simulations;";
         SqliteDataReader reader = command.ExecuteReader();
@@ -193,5 +197,11 @@ public static class Database
         reader.Close();
 
         return numSimulations;
+    }
+
+    public static void CloseConnection()
+    {
+        command.Dispose();
+        connection.Dispose();
     }
 }

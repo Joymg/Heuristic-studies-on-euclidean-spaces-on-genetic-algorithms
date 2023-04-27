@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ public class CPUTester
         }
 
     }
-    [SerializeField] private int currentSimulationIndex;
+    [SerializeField] private int currentSimulationIndex = 1;
     public bool isCalculating;
 
     public int numAgents;
@@ -152,16 +153,21 @@ public class CPUTester
         //        }
         //    }
         //}
+
+
         for (int i = 0; i < simulations; i++)
         {
 
             GenerateNewPopulation(population, movements, spawn);
-            Database.AddSimulation(new Database.Database_SimulationEntry(typeOfDistance, population, movements, Controller.Settings.elitism, Controller.Settings.mutationProb, Controller.Settings.map));
-            currentSimulationIndex = Database.GetNumSimulationsInDatabse();
             for (int j = 0; j < iterations; j++)
             {
+                Controller.Instance.simStopwatch.Start();
                 CPUIteration();
             }
+                Database.AddSimulation(new Database.Database_SimulationEntry(typeOfDistance, population, movements, Controller.Settings.elitism, Controller.Settings.mutationProb, Controller.Settings.map, (int)Controller.Instance.simStopwatch.ElapsedMilliseconds));
+                currentSimulationIndex = Database.GetNumSimulationsInDatabase() + 1;
+                Controller.Instance.simStopwatch.Stop();
+                Controller.Instance.simStopwatch.Reset();
         }
     }
 
@@ -316,6 +322,7 @@ public class CPUTester
     }
     void CPUIteration()
     {
+        Controller.Instance.iteStopwatch.Start();
         for (int i = 0; i < numAgents; i++)
         {
             for (int j = 0; j < numMovements; j++)
@@ -327,8 +334,6 @@ public class CPUTester
             }
         }
         CalculatePopulationFitness();
-
-         Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
 
         GetElites();
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
@@ -371,7 +376,19 @@ public class CPUTester
             SetElites();
         }
 
-
+        Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex,
+                                                                   RatioOfSuccess,
+                                                                   SuccessfulAgents,
+                                                                   CrashedAgents,
+                                                                   (int)Controller.Instance.iteStopwatch.ElapsedMilliseconds,
+                                                                   AverageFitness,
+                                                                   MedianFitness,
+                                                                   MaxFitness,
+                                                                   MinFitness,
+                                                                   VarianceFitness,
+                                                                   StandardDeviationFitness));
+        Controller.Instance.iteStopwatch.Stop();
+        Controller.Instance.iteStopwatch.Reset();
         Controller.Instance.collisionsCPU = lastAgentValidPosition;
     }
 
