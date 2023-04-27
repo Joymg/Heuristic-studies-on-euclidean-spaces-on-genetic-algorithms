@@ -335,6 +335,8 @@ public class CPUTester
         }
         CalculatePopulationFitness();
 
+        Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
+
         GetElites();
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
         {
@@ -398,7 +400,8 @@ public class CPUTester
         for (int i = 0; i < numAgents; i++)
         {
             lastPositionDistance[i] = CalculateDistance(lastAgentValidPosition[i]);
-            if (lastPositionDistance[i] < 1)
+            if (lastPositionDistance[i] < 1) //maybe the agent does't arrive but it changes the distance to 1 as the arrived distance is 0.5 but we change it to 1 if it is under 1
+                                            // so if the agent is between 0.5 and 1 it doesn't detect that the agent arrived but it gives 1 as distance
             {
                 lastPositionDistance[i] = 1;
             }
@@ -411,14 +414,16 @@ public class CPUTester
 
             fitness = 1000 * 1 / lastPositionDistance[i] * 1 / bestDistance;
 
-            if (hasAgentCrashed[i] == 1)
-                fitness *= .5f;
             if (hasAgentReachedTarget[i] == 1)
             {
-                fitness *= 4f;
                 fitness *= (float)((numMovements - indexOfLastAgentValidMovement[i]) / (float)numMovements) + 1f;
             }
-            populationDna[i].fitness = fitness;           
+            else if (hasAgentCrashed[i] == 1)
+            {
+                fitness *= .5f;
+            }
+
+            populationDna[i].fitness = fitness;
         }
     }
     private float CalculateDistance(Vector2 finalPoint)
@@ -484,8 +489,8 @@ public class CPUTester
 
             child.Mutate();
 
-            populationDna[i]= new EliteDna(child);
-            
+            populationDna[i] = new EliteDna(child);
+
             for (int j = 0; j < numMovements; j++)
             {
                 agentsPathLines[i * numMovements + j] = new Line(
