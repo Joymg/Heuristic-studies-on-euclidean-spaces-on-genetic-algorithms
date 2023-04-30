@@ -79,6 +79,7 @@ public static class Database
 
     public struct Database_IterationEntry
     {
+        private readonly int _iteration;
         private readonly int _simulationID;
         private readonly float _successRatio;
         private readonly int _numSuccessfulAgents;
@@ -91,10 +92,11 @@ public static class Database
         private readonly float _varianceFitness;
         private readonly float _standardDeviationFitness;
 
-        public Database_IterationEntry(int simulationID, float successRatio, int numSuccessfulAgents,
+        public Database_IterationEntry(int iteration, int simulationID, float successRatio, int numSuccessfulAgents,
             int numCrashedAgents, int milliseconds, float averageFitness, float medianFitness,
             float maxFitness, float minFitness, float varianceFitness, float standardDeviationFitness)
         {
+            _iteration = iteration;
             _simulationID = simulationID;
             _successRatio = successRatio;
             _numSuccessfulAgents = numSuccessfulAgents;
@@ -111,8 +113,8 @@ public static class Database
         public override string ToString()
         {
             return
-                $"INSERT INTO iterations (simulation, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, medianFitness, maxFitness, minFitness, varianceFitness, standardDeviationFitness) VALUES " +
-                $"('{_simulationID}', '{_successRatio}', '{_numSuccessfulAgents}','{_numCrashedAgents}', '{_milliseconds}','{_averageFitness}','{_medianFitness}','{_maxFitness}','{_minFitness}','{_varianceFitness}','{_standardDeviationFitness}');";
+                $"INSERT INTO iterations (iteration, simulation, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, medianFitness, maxFitness, minFitness, varianceFitness, standardDeviationFitness) VALUES " +
+                $"('{_iteration}', '{_simulationID}', '{_successRatio:000}', '{_numSuccessfulAgents:000}','{_numCrashedAgents:000}', '{_milliseconds}','{_averageFitness:000}','{_medianFitness:000}','{_maxFitness:000}','{_minFitness:000}','{_varianceFitness:000}','{_standardDeviationFitness:000}');";
         }
     }
 
@@ -159,6 +161,7 @@ public static class Database
                               ");";
         command.ExecuteNonQuery();
         command.CommandText = "CREATE TABLE IF NOT EXISTS iterations (iterationID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                              "iteration INTEGER," +
                               "simulation INTEGER," +
                               "successRatio REAL," +
                               "numSuccessfulAgents INTEGER," +

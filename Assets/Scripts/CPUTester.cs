@@ -162,13 +162,15 @@ public class CPUTester
             for (int j = 0; j < iterations; j++)
             {
                 Controller.Instance.simStopwatch.Start();
-                CPUIteration();
+                CPUIteration(i + 1, j + 1);
             }
-                Database.AddSimulation(new Database.Database_SimulationEntry(typeOfDistance, population, movements, Controller.Settings.elitism, Controller.Settings.mutationProb, Controller.Settings.map, (int)Controller.Instance.simStopwatch.ElapsedMilliseconds));
-                currentSimulationIndex = Database.GetNumSimulationsInDatabase() + 1;
-                Controller.Instance.simStopwatch.Stop();
-                Controller.Instance.simStopwatch.Reset();
+            Database.AddSimulation(new Database.Database_SimulationEntry(typeOfDistance, population, movements, Controller.Settings.elitism, Controller.Settings.mutationProb, Controller.Settings.map, (int)Controller.Instance.simStopwatch.ElapsedMilliseconds));
+            currentSimulationIndex = Database.GetNumSimulationsInDatabase() + 1;
+            Controller.Instance.simStopwatch.Stop();
+            Controller.Instance.simStopwatch.Reset();
         }
+
+        Database.CloseConnection();
     }
 
     private void GenerateNewPopulation(int population, int movements, Vector3 spawn)
@@ -320,7 +322,7 @@ public class CPUTester
             lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
         }
     }
-    void CPUIteration()
+    void CPUIteration(int simulation, int iteration)
     {
         Controller.Instance.iteStopwatch.Start();
         for (int i = 0; i < numAgents; i++)
@@ -335,7 +337,18 @@ public class CPUTester
         }
         CalculatePopulationFitness();
 
-        Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
+        Database.AddIteration(new Database.Database_IterationEntry(iteration,
+                                                                   simulation,
+                                                                   RatioOfSuccess,
+                                                                   SuccessfulAgents,
+                                                                   CrashedAgents,
+                                                                   (int)Controller.Instance.iteStopwatch.ElapsedMilliseconds,
+                                                                   AverageFitness,
+                                                                   MedianFitness,
+                                                                   MaxFitness,
+                                                                   MinFitness,
+                                                                   VarianceFitness,
+                                                                   StandardDeviationFitness));
 
         GetElites();
         if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
@@ -378,17 +391,7 @@ public class CPUTester
             SetElites();
         }
 
-        Database.AddIteration(new Database.Database_IterationEntry(currentSimulationIndex,
-                                                                   RatioOfSuccess,
-                                                                   SuccessfulAgents,
-                                                                   CrashedAgents,
-                                                                   (int)Controller.Instance.iteStopwatch.ElapsedMilliseconds,
-                                                                   AverageFitness,
-                                                                   MedianFitness,
-                                                                   MaxFitness,
-                                                                   MinFitness,
-                                                                   VarianceFitness,
-                                                                   StandardDeviationFitness));
+
         Controller.Instance.iteStopwatch.Stop();
         Controller.Instance.iteStopwatch.Reset();
         Controller.Instance.collisionsCPU = lastAgentValidPosition;
@@ -401,7 +404,7 @@ public class CPUTester
         {
             lastPositionDistance[i] = CalculateDistance(lastAgentValidPosition[i]);
             if (lastPositionDistance[i] < 1) //maybe the agent does't arrive but it changes the distance to 1 as the arrived distance is 0.5 but we change it to 1 if it is under 1
-                                            // so if the agent is between 0.5 and 1 it doesn't detect that the agent arrived but it gives 1 as distance
+                                             // so if the agent is between 0.5 and 1 it doesn't detect that the agent arrived but it gives 1 as distance
             {
                 lastPositionDistance[i] = 1;
             }

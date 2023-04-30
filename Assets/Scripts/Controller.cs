@@ -90,7 +90,7 @@ public class Controller : MonoBehaviour
 
     public Stopwatch simStopwatch;
     public Stopwatch iteStopwatch;
-    private bool addedSimulation;
+    public bool simulationFinished;
 
 
     private void Awake()
@@ -109,6 +109,7 @@ public class Controller : MonoBehaviour
         mapSelected.mapObject.SetActive(true);
 
         obstacles = FindObjectsOfType<Obstacle>().ToList();
+        obstacles.ForEach(x => x.CalculateVertex());
 
         spawn = mapSelected.spawn;
         target = mapSelected.target;
@@ -128,6 +129,8 @@ public class Controller : MonoBehaviour
         simStopwatch = new Stopwatch();
         iteStopwatch = new Stopwatch();
 
+        simulationFinished = false;
+
 
         switch (simulationType)
         {
@@ -145,11 +148,6 @@ public class Controller : MonoBehaviour
         }
 
         StartCoroutine(Wait());
-
-        SavedSimulations = Database.GetNumSimulationsInDatabase();
-
-        Database.CloseConnection();
-
     }
 
     private IEnumerator Wait()
@@ -205,10 +203,11 @@ public class Controller : MonoBehaviour
                     }
                     time = 0;
                     population.RepresentBest();
-                    if (!addedSimulation)
+                    if (!simulationFinished)
                     {
-                        addedSimulation = true;
+                        simulationFinished = true;
                         Database.AddIteration(new Database.Database_IterationEntry(numIterations,
+                                                                           Database.GetNumSimulationsInDatabase(),
                                                                            population.RatioOfSuccess,
                                                                            population.SuccessfulAgents,
                                                                            population.CrashedAgents,
@@ -222,24 +221,12 @@ public class Controller : MonoBehaviour
                         Database.AddSimulation(new Database.Database_SimulationEntry(Settings.typeOfDistance, Settings.populationSize, Settings.movements, Settings.elitism, Settings.mutationProb, Settings.map, (int)simStopwatch.ElapsedMilliseconds));
                         simStopwatch.Stop();
                         iteStopwatch.Stop();
+                        Database.CloseConnection();
                     }
                     return;
                 }
 
-                population.NextGeneration();
-
-                Database.AddIteration(new Database.Database_IterationEntry(numIterations,
-                                                                           population.RatioOfSuccess,
-                                                                           population.SuccessfulAgents,
-                                                                           population.CrashedAgents,
-                                                                           (int)iteStopwatch.ElapsedMilliseconds,
-                                                                           population.AverageFitness,
-                                                                           population.MedianFitness,
-                                                                           population.MaxFitness,
-                                                                           population.MinFitness,
-                                                                           population.VarianceFitness,
-                                                                           population.StandardDeviationFitness));
-
+                population.NextGeneration(1, numIterations);
 
                 IncrementIteration?.Invoke();
                 numIterations++;
@@ -267,5 +254,10 @@ public class Controller : MonoBehaviour
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(collisionsGPU[i], 0.1f);
         }
+    }
+
+    private void OnApplicationQuit()
+    {
+        Database.CloseConnection();
     }
 }

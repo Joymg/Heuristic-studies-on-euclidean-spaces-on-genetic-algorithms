@@ -151,10 +151,26 @@ public class Population : MonoBehaviour
         return population.Any(agent => agent.ReachedTarget);
     }
 
-    public void NextGeneration()
+    public void NextGeneration(int simulation, int iteration)
     {
         CalculatePopulationFitness();
-        //Database.AddIteration(new Database.Database_IterationEntry(Controller.Instance.numIterations, RatioOfSuccess, SuccessfulAgents, CrashedAgents, 0, AverageFitness, MedianFitness, MaxFitness, MinFitness, VarianceFitness, StandardDeviationFitness));
+
+        if (!Controller.Instance.simulationFinished)
+        {
+            Database.AddIteration(new Database.Database_IterationEntry(iteration,
+                                                                       simulation,
+                                                                       RatioOfSuccess,
+                                                                       SuccessfulAgents,
+                                                                       CrashedAgents,
+                                                                       (int)Controller.Instance.iteStopwatch.ElapsedMilliseconds,
+                                                                       AverageFitness,
+                                                                       MedianFitness,
+                                                                       MaxFitness,
+                                                                       MinFitness,
+                                                                       VarianceFitness,
+                                                                       StandardDeviationFitness));
+
+        }
         GetElites();
 
         //Time to learn so we take the numElites best from the nextElites list (calculate fitness first), save them in currentElite,
