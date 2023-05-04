@@ -74,9 +74,8 @@ public class CPUTester
     {
         get
         {
-            //populationDna.OrderBy(x => x.fitness);
-            //return numAgents % 2 == 0 ? (populationDna[numAgents / 2].fitness + populationDna[(int)(numAgents / 2) - 1].fitness) / 2 : populationDna[numAgents / 2].fitness;
-            return 0;
+            populationDna.OrderBy(x => x.fitness);
+            return numAgents % 2 == 0 ? (populationDna[numAgents / 2].fitness + populationDna[(int)(numAgents / 2) - 1].fitness) / 2 : populationDna[numAgents / 2].fitness;
         }
     }
 
@@ -301,11 +300,11 @@ public class CPUTester
             out collisionPoints[id.x]);
 
             float distanceToTargetThisMovement = intersects ? CalculateDistance(collisionPoints[id.x]) : CalculateDistance(agentsPathLines[currentAgentLineIndex].v);
-            bool arrivedThisMovement = ((distanceToTargetThisMovement <= 0.5f) && hasAgentCrashed[id.x] != 1);
+            bool arrivedThisMovement = (distanceToTargetThisMovement <= 0.5f) && (hasAgentCrashed[id.x] != 1);
             indexOfFirstArriveCollision[id.x] = arrivedThisMovement ? id.y : indexOfFirstArriveCollision[id.x];
             hasAgentReachedTarget[id.x] = (hasAgentReachedTarget[id.x] == 1) || arrivedThisMovement ? 1 : 0;
 
-            bool hasIntersected = ((hasAgentCrashed[id.x] == 1) || (intersects && hasAgentReachedTarget[id.x] != 1)) ? true : false;
+            bool hasIntersected = (hasAgentCrashed[id.x] == 1) || (intersects && (hasAgentReachedTarget[id.x] != 1)) ? true : false;
 
             bool improves = (int)id.y < indexOfFirstCollision[id.x];
 
@@ -315,11 +314,12 @@ public class CPUTester
 
             hasAgentCrashed[id.x] = hasIntersected ? 1 : 0;
 
-            indexOfFirstCollision[id.x] = intersects && improves ? id.y : indexOfFirstCollision[id.x];
+            indexOfFirstCollision[id.x] = (intersects && hasAgentReachedTarget[id.x] != 1) && improves ? id.y : indexOfFirstCollision[id.x];
 
-            indexOfLastAgentValidMovement[id.x] = intersects && improves || arrivedThisMovement ? id.y : indexOfLastAgentValidMovement[id.x];
+            indexOfLastAgentValidMovement[id.x] = intersects && (hasAgentReachedTarget[id.x] != 1) && improves || arrivedThisMovement ? id.y : indexOfLastAgentValidMovement[id.x];
 
-            lastAgentValidPosition[id.x] = hasAgentCrashed[id.x] == 1 && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
+            lastAgentValidPosition[id.x] = intersects && (hasAgentReachedTarget[id.x] != 1) && improves ? collisionPoints[id.x] : lastAgentValidPosition[id.x];
+            lastAgentValidPosition[id.x] = arrivedThisMovement ? agentsPathLines[currentAgentLineIndex].v : lastAgentValidPosition[id.x];
         }
     }
     void CPUIteration(int simulation, int iteration)
@@ -403,10 +403,11 @@ public class CPUTester
         for (int i = 0; i < numAgents; i++)
         {
             lastPositionDistance[i] = CalculateDistance(lastAgentValidPosition[i]);
+            float lastDistance = lastPositionDistance[i];
             if (lastPositionDistance[i] < 1) //maybe the agent does't arrive but it changes the distance to 1 as the arrived distance is 0.5 but we change it to 1 if it is under 1
                                              // so if the agent is between 0.5 and 1 it doesn't detect that the agent arrived but it gives 1 as distance
             {
-                lastPositionDistance[i] = 1;
+                lastDistance = 1;
             }
 
             float bestDistance = bestPositionDistance[i];
@@ -415,7 +416,7 @@ public class CPUTester
                 bestDistance = 1;
             }
 
-            fitness = 1000 * 1 / lastPositionDistance[i] * 1 / bestDistance;
+            fitness = 1000f * 1 / lastDistance * 1 / bestDistance;
 
             if (hasAgentReachedTarget[i] == 1)
             {
@@ -436,7 +437,7 @@ public class CPUTester
             case TypeOfDistance.Manhattan:
                 return Mathf.Abs(finalPoint.x - target.x) + Mathf.Abs(finalPoint.y - target.y);
             case TypeOfDistance.Chebyshev:
-                return Mathf.Max(finalPoint.x - target.x, finalPoint.y - target.y);
+                return Mathf.Max(Mathf.Abs(finalPoint.x - target.x), Mathf.Abs(finalPoint.y - target.y));
             case TypeOfDistance.Euclidean:
             default:
                 return Mathf.Sqrt(Mathf.Pow(finalPoint.x - target.x, 2) + Mathf.Pow(finalPoint.y - target.y, 2));

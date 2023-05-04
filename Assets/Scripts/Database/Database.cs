@@ -114,7 +114,7 @@ public static class Database
         {
             return
                 $"INSERT INTO iterations (iteration, simulation, successRatio, numSuccessfulAgents, numCrashedAgents, milliseconds, averageFitness, medianFitness, maxFitness, minFitness, varianceFitness, standardDeviationFitness) VALUES " +
-                $"('{_iteration}', '{_simulationID}', '{_successRatio:000}', '{_numSuccessfulAgents:000}','{_numCrashedAgents:000}', '{_milliseconds}','{_averageFitness:000}','{_medianFitness:000}','{_maxFitness:000}','{_minFitness:000}','{_varianceFitness:000}','{_standardDeviationFitness:000}');";
+                $"('{_iteration}', '{_simulationID}', '{_successRatio}', '{_numSuccessfulAgents}','{_numCrashedAgents}', '{_milliseconds}','{_averageFitness}','{_medianFitness}','{_maxFitness}','{_minFitness}','{_varianceFitness}','{_standardDeviationFitness}');";
         }
     }
 

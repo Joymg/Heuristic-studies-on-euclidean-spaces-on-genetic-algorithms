@@ -6,6 +6,6 @@ public class AgentChebyshev : Agent
 {
     protected override float CalculateDistance()
     {
-        return Mathf.Max(transform.position.x - target.x, transform.position.y - target.y);
+        return Mathf.Max(Mathf.Abs(transform.position.x - target.x), Mathf.Abs(transform.position.y - target.y));
     }
 }
