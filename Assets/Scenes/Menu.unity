@@ -8424,8 +8424,6 @@ MonoBehaviour:
       m_Image: {fileID: 0}
     - m_Text: CPUMath
       m_Image: {fileID: 0}
-    - m_Text: GPUMath
-      m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []

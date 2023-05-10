@@ -167,6 +167,8 @@ public class CPUTester
             currentSimulationIndex = Database.GetNumSimulationsInDatabase() + 1;
             Controller.Instance.simStopwatch.Stop();
             Controller.Instance.simStopwatch.Reset();
+            learningPeriodAccumulatedElite.Clear();
+            currentElite.Clear();
         }
 
         Database.CloseConnection();
@@ -336,8 +338,9 @@ public class CPUTester
             }
         }
         CalculatePopulationFitness();
-
-        Database.AddIteration(new Database.Database_IterationEntry(iteration,
+        if (iteration % Controller.Settings.learningPeriod == 0)
+        {
+            Database.AddIteration(new Database.Database_IterationEntry(iteration / Controller.Settings.learningPeriod,
                                                                    simulation,
                                                                    RatioOfSuccess,
                                                                    SuccessfulAgents,
@@ -349,12 +352,13 @@ public class CPUTester
                                                                    MinFitness,
                                                                    VarianceFitness,
                                                                    StandardDeviationFitness));
+        }
 
         GetElites();
-        if (Controller.Instance.numIterations % Controller.Settings.learningPeriod == 0)
+        if (iteration % Controller.Settings.learningPeriod == 0)
         {
             currentElite.Clear();
-            learningPeriodAccumulatedElite.OrderByDescending(agent => agent.fitness).ToArray();
+            learningPeriodAccumulatedElite = learningPeriodAccumulatedElite.OrderByDescending(agent => agent.fitness).ToList();
             currentElite.AddRange(learningPeriodAccumulatedElite.GetRange(0, Controller.Settings.elitism));
             learningPeriodAccumulatedElite.Clear();
         }
